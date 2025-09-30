@@ -1,0 +1,42 @@
+{
+	"name": "@jsxtools/cem-analyzer",
+	"description": "A typed release of the Custom Elements Manifest analyzer.",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		"./*": "./dist/*.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "rollup --silent --config",
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"clean:build": "rm -rf dist tsconfig.tsbuildinfo && rollup --silent --config",
+		"watch:build": "rm -rf dist tsconfig.tsbuildinfo && rollup --silent --watch --config",
+		"watch": "rollup --silent --watch --config"
+	},
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"license": "MIT-0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jsxtools/rollup-utils.git",
+		"directory": "packages/cem-analyzer"
+	},
+	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/cem-analyzer",
+	"dependencies": {
+		"custom-elements-manifest": "^1.0.0",
+		"@github/catalyst": "^1.6.0",
+		"comment-parser": "^1.2.4"
+	},
+	"devDependencies": {
+		"@custom-elements-manifest/analyzer": "^0.10.8",
+		"@jsxtools/rollup-plugin-utils": "^0.1.0",
+		"@types/node": "^24.5.2",
+		"rollup": "^4.6.0",
+		"typescript": "^5.4.5"
+	},
+	"peerDependencies": {
+		"typescript": "^5.4.5"
+	}
+}

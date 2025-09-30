@@ -1,0 +1,13 @@
+{
+	"name": "@jsxtools/rollup-plugin-copy.test",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"clean": "rm -rf dist; rm -rf cpconfig.cpbuildinfo",
+		"test": "rollup --config"
+	},
+	"devDependencies": {
+		"@jsxtools/rollup-plugin-copy": "^0.1.0",
+		"rollup": "^4.6.0"
+	}
+}

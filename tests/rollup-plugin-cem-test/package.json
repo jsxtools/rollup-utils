@@ -1,0 +1,15 @@
+{
+	"name": "@jsxtools/rollup-plugin-cem.test",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"test": "rollup --config"
+	},
+	"devDependencies": {
+		"@jsxtools/rollup-plugin-cem": "^0.1.0",
+		"@jsxtools/rollup-plugin-tsc": "^0.1.0",
+		"rollup": "^4.6.0",
+		"typescript": "^5.4.5"
+	}
+}

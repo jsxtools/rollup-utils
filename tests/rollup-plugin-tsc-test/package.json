@@ -1,0 +1,13 @@
+{
+	"name": "@jsxtools/rollup-plugin-tsc.test",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"test": "rollup --config"
+	},
+	"devDependencies": {
+		"@jsxtools/rollup-plugin-tsc": "^0.1.0",
+		"rollup": "^4.6.0"
+	}
+}

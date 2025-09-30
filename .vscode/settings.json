@@ -1,0 +1,10 @@
+{
+	"editor.insertSpaces": false,
+	"editor.tabSize": 4,
+	"editor.detectIndentation": false,
+	"explorer.compactFolders": false,
+	"files.exclude": {
+		"**/.git": true,
+		"**/node_modules": true
+	}
+}

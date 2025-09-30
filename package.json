@@ -1,0 +1,33 @@
+{
+	"name": "@jsxtools/pkg.root",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"overrides": {
+		"typescript": "$typescript"
+	},
+	"scripts": {
+		"build": "tsc --build --excludeDirectories packages/cem-analyzer && (cd packages/cem-analyzer && rollup --silent --config)",
+		"build:watch": "tsc --watch",
+		"clean": "git clean -xdf; rm -rf package-lock.json",
+		"clean:build": "npm run clean:build",
+		"clean:test:copy": "cd tests/rollup-plugin-copy-test && npm run clean && npm test",
+		"clean:test:cem": "cd tests/rollup-plugin-cem-test && npm run clean && npm test",
+		"clean:test:tsc": "cd tests/rollup-plugin-tsc-test && npm run clean && npm test",
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome lint .",
+		"lint:fix": "biome lint --write .",
+		"check": "biome check .",
+		"check:fix": "biome check --write .",
+		"test:copy": "cd tests/rollup-plugin-copy-test && npm test",
+		"test:cem": "cd tests/rollup-plugin-cem-test && npm test",
+		"test:tsc": "cd tests/rollup-plugin-tsc-test && npm test"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.4",
+		"typescript": "^5.4.5"
+	}
+}

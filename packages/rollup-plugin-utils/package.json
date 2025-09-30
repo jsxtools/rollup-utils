@@ -1,0 +1,37 @@
+{
+	"name": "@jsxtools/rollup-plugin-utils",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		"./get-file-hash": "./dist/get-file-hash.js",
+		"./options": "./dist/options.js",
+		"./path": "./dist/path.js",
+		"./virtual-asset": "./dist/virtual-asset.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"clean:build": "rm -rf dist tsconfig.tsbuildinfo && tsc",
+		"clean:watch": "rm -rf dist tsconfig.tsbuildinfo && tsc --watch",
+		"watch": "tsc --watch"
+	},
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"license": "MIT-0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jsxtools/rollup-utils.git",
+		"directory": "packages/rollup-plugin-utils"
+	},
+	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-utils",
+	"devDependencies": {
+		"@types/node": "^24.5.2",
+		"rollup": "^4.6.0",
+		"typescript": "^5.4.5"
+	},
+	"peerDependencies": {
+		"rollup": "^4.6.0"
+	}
+}

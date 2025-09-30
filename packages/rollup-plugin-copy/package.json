@@ -1,0 +1,39 @@
+{
+	"name": "@jsxtools/rollup-plugin-copy",
+	"description": "A Rollup plugin for copying files during the build process.",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		".": "./dist/copy-rollup-plugin.js",
+		"./api": "./dist/copy-api.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"clean:build": "rm -rf dist tsconfig.tsbuildinfo && tsc",
+		"clean:watch": "rm -rf dist tsconfig.tsbuildinfo && tsc --watch",
+		"watch": "tsc --watch"
+	},
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"license": "MIT-0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jsxtools/rollup-utils.git",
+		"directory": "packages/rollup-plugin-copy"
+	},
+	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-copy",
+	"dependencies": {
+		"@jsxtools/rollup-plugin-utils": "^0.1.0"
+	},
+	"devDependencies": {
+		"@types/node": "^24.5.2",
+		"rollup": "^4.6.0",
+		"typescript": "^5.4.5"
+	},
+	"peerDependencies": {
+		"rollup": "^4.6.0"
+	}
+}
