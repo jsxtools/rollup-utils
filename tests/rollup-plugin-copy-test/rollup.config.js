@@ -15,8 +15,6 @@ export default defineConfig({
 	treeshake: false,
 	plugins: [
 		rollupPluginCopy({
-			rootDir: "src",
-			distDir: "dist",
 			include: ["src/*.css"],
 		}),
 		{

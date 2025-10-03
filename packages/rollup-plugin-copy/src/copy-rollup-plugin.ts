@@ -1,71 +1,62 @@
+import { getDirs } from "@jsxtools/rollup-plugin-utils/options"
 import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset"
-import type { LoadResult, NormalizedInputOptions, Plugin, ResolveIdResult } from "rollup"
+import type * as Rollup from "rollup"
 import { CopyAPI, type CopyOptions } from "./copy-api.js"
 
-export const rollupPluginCopy = (pluginOptions?: CopyOptions): Plugin => {
+export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => {
 	const copy = new CopyAPI()
 	const virtualAsset = new VirtualAsset("rollup-plugin-copy")
 
+	let deferred = Promise.resolve()
 	let firstRun = true
 	let watchRun = false
 
 	return {
 		name: "rollup-plugin-copy",
-		async buildStart(options: NormalizedInputOptions): Promise<void> {
+		options(options: Rollup.RollupOptions): Rollup.RollupOptions {
 			if (firstRun) {
-				copy.init(pluginOptions)
+				copy.init({
+					...getDirs(options),
+					...pluginOptions,
+				})
 
-				await copy.loadConfig()
+				deferred = deferred.then(() => copy.loadCache())
 			}
 
+			return options
+		},
+		buildStart(options: Rollup.NormalizedInputOptions): void {
 			if (firstRun || watchRun) {
-				await copy.captureWatchedFiles()
+				deferred = deferred.then(() => copy.updateCache())
 			}
 
 			virtualAsset.buildStart(this, options)
-
-			await copy.captureChangedFiles()
-
-			for (const changedFile of copy.changedFiles) {
-				this.emitFile({
-					type: "asset",
-					fileName: copy.getRelativePath(changedFile, copy.rootDir),
-					needsCodeReference: false,
-					originalFileName: copy.getAbsolutePath(changedFile, copy.workDir),
-					source: await copy.getFileContent(changedFile),
-				})
-			}
-
-			// Clear file contents cache to free memory after emitting all files
-			copy.clearFileContentsCache()
-
-			if (this.meta.watchMode) {
-				for (const watchedFile of copy.watchedFiles) {
-					this.addWatchFile(watchedFile)
-				}
-			}
 		},
-		resolveId(id, importer, options): ResolveIdResult {
+		resolveId(id, importer, options): Rollup.ResolveIdResult {
 			return virtualAsset.resolveId(this, id, importer, options)
 		},
-		load(id): LoadResult {
+		load(id): Rollup.LoadResult {
 			return virtualAsset.load(this, id)
 		},
 		generateBundle(options, bundle): void {
-			firstRun = false
-			watchRun = false
-
 			virtualAsset.generateBundle(this, options, bundle)
 		},
-		async writeBundle(): Promise<void> {
-			if (copy.changedFiles.length > 0) {
-				await copy.saveConfig().catch((error) => {
-					this.warn(`Failed to save asset cache: ${error}`)
-				})
+		writeBundle(): Promise<void> | void {
+			if (firstRun || watchRun) {
+				firstRun = false
+				watchRun = false
+
+				if (this.meta.watchMode) {
+					this.addWatchFile(copy.cacheFile)
+				}
+
+				deferred = deferred.then(() => copy.saveCache())
+
+				return deferred
 			}
 		},
 		watchChange(id): void {
-			if (copy.watchedFiles.includes(id)) {
+			if (id === copy.cacheFile) {
 				watchRun = true
 			}
 		},

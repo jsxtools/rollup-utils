@@ -27,7 +27,7 @@
 		"test:tsc": "cd tests/rollup-plugin-tsc-test && npm test"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.4",
+		"@biomejs/biome": "^2.2.5",
 		"typescript": "^5.4.5"
 	}
 }

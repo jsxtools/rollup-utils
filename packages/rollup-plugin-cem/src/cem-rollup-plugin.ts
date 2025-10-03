@@ -1,22 +1,23 @@
-import { toArray } from "@jsxtools/rollup-plugin-utils/options"
+import { getDirs } from "@jsxtools/rollup-plugin-utils/options"
 import type { Plugin, RollupOptions } from "rollup"
 import { CemAPI, type CemOptions } from "./cem-api.js"
 
-export const rollupPluginCem = (userOptions?: CemOptions): Plugin => {
-	const cem = new CemAPI()
+export const rollupPluginCem = (pluginOptions?: CemOptions): Plugin => {
+	const api = new CemAPI()
 
 	let firstRun = false
 
 	return {
 		name: "rollup-plugin-cem",
-		options(options: RollupOptions): void {
+		options(options: RollupOptions): RollupOptions {
 			if (!firstRun) {
-				cem.init({
-					distDir: toArray(options.output).find((output) => output.dir)?.dir,
-					rootDir: toArray(options.output).find((output) => output.preserveModulesRoot)?.preserveModulesRoot,
-					...userOptions,
+				api.init({
+					...getDirs(options),
+					...pluginOptions,
 				})
 			}
+
+			return options
 		},
 		transform: {
 			order: "post",
@@ -24,7 +25,7 @@ export const rollupPluginCem = (userOptions?: CemOptions): Plugin => {
 				const sourceFile = this.getModuleInfo(id)?.meta?.tsc?.sourceFile
 
 				if (sourceFile) {
-					cem.modules.add(sourceFile)
+					api.modules.add(sourceFile)
 				}
 
 				return null
@@ -33,7 +34,7 @@ export const rollupPluginCem = (userOptions?: CemOptions): Plugin => {
 		writeBundle(): void {
 			firstRun = false
 
-			cem.updateManifest()
+			api.updateManifest()
 		},
 	}
 }

@@ -23,7 +23,7 @@
 		"strict": true,
 		"target": "es2024"
 	},
-	"include": ["./packages/**/src/**/*"],
+	"include": ["./packages/*/src/**/*"],
 	"exclude": ["./packages/cem-analyzer"],
 	"references": [
 		{

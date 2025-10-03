@@ -1,5 +1,5 @@
-import { toMergedArray } from "@jsxtools/rollup-plugin-utils/options"
-import { relative, resolve, resolveDir } from "@jsxtools/rollup-plugin-utils/path"
+import * as array from "@jsxtools/rollup-plugin-utils/array"
+import * as path from "@jsxtools/rollup-plugin-utils/path"
 
 import * as ts from "typescript"
 
@@ -13,12 +13,12 @@ const enum Default {
 
 export class TscAPI {
 	/** Working directory. */
-	workDir = resolveDir(Default.WorkDir)
-	rootDir = resolveDir(Default.WorkDir, Default.RootDir)
-	distDir = resolveDir(Default.WorkDir, Default.RootDir)
+	workDir = path.toDirPath(Default.WorkDir)
+	rootDir = path.toDirPath(Default.WorkDir, Default.RootDir)
+	distDir = path.toDirPath(Default.WorkDir, Default.RootDir)
 	include = [] as string[]
 	exclude = [] as string[]
-	configFile = resolve(Default.WorkDir, Default.ConfigFile)
+	configFile = path.toPath(Default.WorkDir, Default.ConfigFile)
 
 	host!: ts.CompilerHost
 	program!: ts.EmitAndSemanticDiagnosticsBuilderProgram
@@ -34,21 +34,21 @@ export class TscAPI {
 	emitableSource = new Map<string, string>()
 
 	init(options?: TscApiOptions): void {
-		this.workDir = resolveDir(options?.workDir ?? Default.WorkDir)
+		this.workDir = path.toDirPath(options?.workDir ?? Default.WorkDir)
 
 		const configFile = this.getConfigFile(options?.configFile ?? Default.ConfigFile)
 		const configData = { ...ts.readConfigFile(configFile, ts.sys.readFile).config }
 
 		if (Array.isArray(options?.include)) {
-			configData.include = toMergedArray(configData.include, options.include)
+			configData.include = array.merge(configData.include, options.include)
 		}
 
 		if (Array.isArray(options?.exclude)) {
-			configData.exclude = toMergedArray(configData.exclude, options.exclude)
+			configData.exclude = array.merge(configData.exclude, options.exclude)
 		}
 
 		if (Array.isArray(options?.references)) {
-			configData.references = toMergedArray(configData.references, options.references)
+			configData.references = array.merge(configData.references, options.references)
 		}
 
 		this.configFile = configFile
@@ -70,7 +70,7 @@ export class TscAPI {
 	}
 
 	getConfigFile(configFile: string): string {
-		return ts.findConfigFile(this.workDir, ts.sys.fileExists, configFile) ?? resolve(this.workDir, configFile)
+		return ts.findConfigFile(this.workDir, ts.sys.fileExists, configFile) ?? path.toPath(this.workDir, configFile)
 	}
 
 	writeEmitableAssets(): void {
@@ -91,7 +91,7 @@ export class TscAPI {
 
 		this.#program = this.program.getProgram()
 
-		this.distDir = this.program.getCompilerOptions().outDir ?? resolve(this.workDir ?? this.rootDir)
+		this.distDir = this.program.getCompilerOptions().outDir ?? path.toDirPath(this.workDir ?? this.rootDir)
 
 		this.#outputToSource.clear()
 		this.compiledSource.clear()
@@ -116,7 +116,7 @@ export class TscAPI {
 
 			if (outputFileName.endsWith(".js")) {
 				this.#getCompiledSource(sourceFiles).jsc = {
-					name: relative(this.distDir, outputFileName),
+					name: path.toPathWithoutBase(outputFileName, this.distDir),
 					code,
 				}
 
@@ -125,7 +125,7 @@ export class TscAPI {
 
 			if (outputFileName.endsWith(".d.ts")) {
 				this.#getCompiledSource(sourceFiles).dts = {
-					name: relative(this.distDir, outputFileName),
+					name: path.toPathWithoutBase(outputFileName, this.distDir),
 					code,
 				}
 
@@ -134,7 +134,7 @@ export class TscAPI {
 
 			if (outputFileName.endsWith(".map")) {
 				this.#getCompiledSource(sourceFiles).map = {
-					name: relative(this.distDir, outputFileName),
+					name: path.toPathWithoutBase(outputFileName, this.distDir),
 					code,
 				}
 

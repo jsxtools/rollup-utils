@@ -1,215 +1,230 @@
-import { glob, readFile, stat, writeFile } from "node:fs/promises"
-import { getFileHashAndData } from "@jsxtools/rollup-plugin-utils/get-file-hash"
-import { toArray } from "@jsxtools/rollup-plugin-utils/options"
-import { relative, resolve, resolveDir } from "@jsxtools/rollup-plugin-utils/path"
+import * as array from "@jsxtools/rollup-plugin-utils/array"
+import * as fs from "@jsxtools/rollup-plugin-utils/file"
+import * as json from "@jsxtools/rollup-plugin-utils/json"
+import * as path from "@jsxtools/rollup-plugin-utils/path"
+import * as str from "@jsxtools/rollup-plugin-utils/string"
 
 const enum Default {
 	CacheFile = "cpconfig.cpbuildinfo",
 	RootDir = "src",
 	DistDir = "dist",
-	WorkDir = ".",
+	WorkDir = "",
 }
 
 export class CopyAPI {
-	/** Working directory. */
-	workDir = resolveDir(Default.WorkDir)
-
-	/** Source directory. */
-	rootDir = resolveDir(Default.WorkDir, Default.RootDir)
-
-	/** Destination directory. */
-	distDir = resolveDir(Default.WorkDir, Default.DistDir)
-
-	/** File patterns to include. */
-	include = [] as string[]
-
-	/** File patterns to exclude. */
-	exclude = [] as string[]
-
-	/** Cache file. */
-	cacheFile = resolve(Default.WorkDir, Default.CacheFile)
-
-	cache = Object.create(null) as CacheRecord
-	watchedFiles = [] as string[]
-	changedFiles = [] as string[]
-
-	/** Files read during build. */
-	fileContents = new Map<string, Buffer>()
-
-	init(userOptions = null as never as CopyOptions): void {
-		this.workDir = resolveDir(userOptions?.workDir ?? Default.WorkDir)
-		this.rootDir = resolveDir(this.workDir, userOptions?.rootDir ?? Default.RootDir)
-		this.distDir = resolveDir(this.workDir, userOptions?.distDir ?? Default.DistDir)
-
-		this.include = toArray(userOptions?.include).map(String)
-		this.exclude = toArray(userOptions?.exclude).map(String)
-
-		this.cacheFile = resolve(this.workDir, userOptions?.cacheFile ?? Default.CacheFile)
+	#internals = {
+		cache: {
+			fileNames: [],
+			fileInfos: [],
+			version: "0.2.0",
+		} as Cache,
+		files: {
+			globbed: [] as string[],
+			stashed: [] as string[],
+		},
+		glob: {
+			include: ["**/*"],
+			exclude: ["node_modules"],
+		} as fs.GlobOptions,
+		operations: {
+			dists: [] as FileOperation[],
+			cache: [] as FileOperation[],
+			files: [] as FileOperation[],
+		},
+		paths: {
+			workDir: path.toDirURL(Default.WorkDir),
+			rootDir: path.toDirURL(Default.WorkDir, Default.RootDir),
+			distDir: path.toDirURL(Default.WorkDir, Default.DistDir),
+			cacheFile: path.toURL(Default.WorkDir, Default.CacheFile),
+		},
+		stash: {
+			cache: {} as Record<string, FileCache>,
+			files: new Map<string, FileCache>(),
+			shouldUpdate: false,
+		},
 	}
 
-	async captureWatchedFiles(): Promise<void> {
-		this.watchedFiles = []
-
-		for await (const filePath of glob(this.include, {
-			cwd: this.workDir,
-			exclude: this.exclude,
-		})) {
-			this.watchedFiles.push(`./${filePath}`)
-		}
+	get cacheFile(): string {
+		return this.#internals.paths.cacheFile.pathname
 	}
 
-	async captureChangedFiles(): Promise<void> {
-		const awaited: Promise<void>[] = []
+	files(): AsyncGenerator<string, void, void> {
+		const { glob, paths } = this.#internals
 
-		this.changedFiles = []
-
-		for (const watchedFile of this.watchedFiles) {
-			awaited.push(
-				this.hasFileChanged(watchedFile).then((hasChanged) => {
-					if (hasChanged) {
-						this.changedFiles.push(watchedFile)
-					}
-				}),
-			)
-		}
-
-		await Promise.all(awaited)
+		return fs.glob({
+			cwd: paths.workDir,
+			include: glob.include,
+			exclude: glob.exclude,
+		})
 	}
 
-	async loadConfig(): Promise<CacheRecord> {
-		const cacheRecord = Object.create(null) as CacheRecord
+	init(options = null as never as CopyOptions): void {
+		const { paths, glob } = this.#internals
 
-		try {
-			const cacheRecordJson = await readFile(this.cacheFile, "utf-8")
+		paths.workDir = path.toDirURL(options?.workDir ?? Default.WorkDir)
+		paths.rootDir = path.toDirURL(paths.workDir, options?.rootDir ?? Default.RootDir)
+		paths.distDir = path.toDirURL(paths.workDir, options?.distDir ?? Default.DistDir)
+		paths.cacheFile = path.toURL(paths.workDir, options?.cacheFile ?? Default.CacheFile)
 
-			Object.assign(cacheRecord, JSON.parse(cacheRecordJson))
-		} catch {
-			// Cache file doesn't exist or is invalid, continue with empty cache
-		} finally {
-			this.cache = cacheRecord
-		}
-
-		return this.cache
+		Object.assign(glob, {
+			include: array.from(options?.include, str.hasTrimmedValue),
+			exclude: array.from(options?.exclude, str.hasTrimmedValue),
+		})
 	}
 
-	async saveConfig(): Promise<void> {
-		await writeFile(this.cacheFile, JSON.stringify(this.cache))
-	}
+	async loadCache(): Promise<void> {
+		const { cache, paths, stash } = this.#internals
+		const filed = await fs.readJSON<Cache>(paths.cacheFile).catch(() => undefined)
 
-	async getFileStats(filePath: string): Promise<FileStats | null> {
-		try {
-			const fileStats = await stat(resolve(this.workDir, filePath))
+		cache.fileNames = []
+		cache.fileInfos = []
 
-			return {
-				mtime: fileStats.mtimeMs,
-				size: fileStats.size,
+		stash.cache = {}
+		stash.shouldUpdate = false
+
+		if (filed?.version === cache.version) {
+			const fileNames = array.every(filed.fileNames, isCacheFileName) ? filed.fileNames : []
+			const fileInfos = array.every(filed.fileInfos, isCacheFileInfo) ? filed.fileInfos : []
+
+			if (fileNames.length === fileInfos.length) {
+				cache.fileNames.push(...fileNames)
+				cache.fileInfos.push(...fileInfos)
+
+				stash.cache = Object.fromEntries(
+					fileNames.map((fileName, index) => [path.toPath(paths.workDir, fileName), fileInfos[index]]),
+				)
 			}
-		} catch {
-			return null
 		}
 	}
 
-	async hasFileChanged(filePath: string): Promise<boolean> {
-		const stats = await this.getFileStats(filePath)
+	async updateCache(): Promise<void> {
+		const { operations, paths, stash } = this.#internals
+		const globbedFiles = await Array.fromAsync(this.files())
 
-		// return false if the file doesn't exist
-		if (stats === null) {
-			return false
+		operations.cache = []
+		operations.files = []
+
+		stash.files.clear()
+		stash.shouldUpdate = false
+
+		for (const [stashedPath, stashedInfo] of Object.entries(stash.cache)) {
+			const cachingPath = path.toRelativePath(paths.workDir, stashedPath)
+
+			if (!globbedFiles.includes(stashedPath)) {
+				stash.shouldUpdate = true
+				operations.files.push(async () => await fs.deleteFile(stashedPath))
+			} else {
+				operations.cache.push(async () => {
+					const stat = await fs.getFileStats(stashedPath)
+
+					if (stat.mtimeMs === stashedInfo[0] && stat.size === stashedInfo[1]) {
+						stash.files.set(cachingPath, stashedInfo)
+					} else {
+						const hash = await fs.hash(stashedPath)
+
+						stashedInfo[0] = stat.mtimeMs
+						stashedInfo[1] = stat.size
+
+						if (stashedInfo[2] !== hash) {
+							stashedInfo[2] = hash
+
+							stash.shouldUpdate = true
+							stash.files.set(cachingPath, stashedInfo)
+
+							const relativePath = path.toRelativePath(paths.rootDir, stashedPath)
+							const targetedPath = path.toPath(paths.distDir, relativePath)
+
+							operations.files.push(async () => await fs.copy(stashedPath, targetedPath))
+						}
+					}
+				})
+			}
 		}
 
-		const resolvedPath = resolve(this.workDir, filePath)
+		for (const globbedFile of globbedFiles) {
+			if (!Object.hasOwn(stash.cache, globbedFile)) {
+				const cachingPath = path.toRelativePath(paths.workDir, globbedFile)
+				const relativePath = path.toRelativePath(paths.rootDir, globbedFile)
+				const targetedPath = path.toPath(paths.distDir, relativePath)
 
-		// return true if the file is not in the cache
-		if (!(filePath in this.cache)) {
-			const { hash, data } = await getFileHashAndData(resolvedPath)
+				operations.cache.push(async () => {
+					const [stat, hash] = await Promise.all([fs.getFileStats(globbedFile), fs.hash(globbedFile)])
 
-			this.cache[filePath] = { ...stats, hash }
+					stash.shouldUpdate = true
+					stash.files.set(cachingPath, [stat.mtimeMs, stat.size, hash])
+				})
 
-			// store uncached data to avoid re-reading
-			this.fileContents.set(filePath, data ?? emptyBuffer)
-
-			return true
+				operations.files.push(async () => await fs.copy(globbedFile, targetedPath))
+			}
 		}
 
-		const oldEntry = this.cache[filePath]!
-		const newEntry = { ...oldEntry, ...stats } as CacheEntry
-
-		// return false if the file has not changed modified time or size
-		if (oldEntry.mtime === newEntry.mtime && oldEntry.size === newEntry.size) {
-			return false
-		}
-
-		const { hash, data } = await getFileHashAndData(resolvedPath)
-
-		newEntry.hash = hash
-
-		// return false if the hash has not changed
-		if (oldEntry.hash === newEntry.hash) {
-			return false
-		}
-
-		this.cache[filePath] = newEntry
-
-		// store uncached data to avoid re-reading
-		this.fileContents.set(filePath, data ?? emptyBuffer)
-
-		return true
+		return this.#operate(operations.cache)
 	}
 
-	getAbsolutePath(filePath: string, basePath = this.rootDir): string {
-		return resolve(basePath, filePath)
-	}
+	async saveCache(): Promise<void> {
+		const { cache, operations, paths, stash } = this.#internals
 
-	getRelativePath(filePath: string, basePath = this.rootDir): string {
-		return relative(basePath, filePath)
-	}
+		if (stash.shouldUpdate) {
+			cache.fileNames = [...stash.files.keys()]
+			cache.fileInfos = [...stash.files.values()]
 
-	/**
-	 * Get cached file content if available, otherwise read from disk.
-	 * This avoids double reads when content was already loaded during hash calculation.
-	 */
-	async getFileContent(filePath: string): Promise<Buffer> {
-		const cachedContent = this.fileContents.get(filePath)
+			await Promise.all([fs.mkdir(path.toParentURL(paths.cacheFile)), fs.mkdir(paths.distDir)])
 
-		if (cachedContent) {
-			return cachedContent
+			await Promise.all([fs.writeFile(paths.cacheFile, json.to(cache)), this.#operate(operations.files)])
 		}
-
-		// Fallback to reading from disk if not cached
-		return await readFile(resolve(this.workDir, filePath))
 	}
 
-	/**
-	 * Clear the file contents cache to free memory after processing.
-	 * Should be called after all files have been emitted.
-	 */
-	clearFileContentsCache(): void {
-		this.fileContents.clear()
+	async #operate(operations: FileOperation[]): Promise<void> {
+		await Promise.all(operations.splice(0).map(operate))
 	}
 }
 
-const emptyBuffer = Buffer.from([])
+const isCacheFileName = (fileName: unknown): fileName is string => typeof fileName === "string"
+const isCacheFileInfo = (fileInfo: unknown): fileInfo is FileCache =>
+	Array.isArray(fileInfo) &&
+	fileInfo.length === 3 &&
+	typeof fileInfo[0] === "number" &&
+	typeof fileInfo[1] === "number" &&
+	typeof fileInfo[2] === "string"
+
+const operate = (operation: FileOperation) => operation()
+
+export interface Cache {
+	fileNames: string[]
+	fileInfos: FileCache[]
+	version: string
+}
+
+export type FileCache = [time: number, size: number, hash: string]
+
+export type FileOperation = () => Promise<void>
+
+// const emptyBuffer = Buffer.from([])
 
 export interface CopyOptions {
-	cacheFile?: string
-	workDir?: string
-	rootDir?: string
-	distDir: string
-	include?: string | string[]
-	exclude?: string | string[]
+	cacheFile?: string | undefined
+	workDir?: string | undefined
+	rootDir?: string | undefined
+	distDir?: string | undefined
+	include?: string | undefined | (string | undefined)[]
+	exclude?: string | undefined | (string | undefined)[]
 }
 
 // #region Types
 
-export interface CacheRecord extends Record<string, CacheEntry> {}
+// export interface CacheRecord extends Record<string, CacheEntry> {}
 
-export interface CacheEntry {
-	hash: string | null
-	mtime: number
-	size: number
-}
+// export type { CacheEntry }
 
 export interface FileStats {
 	mtime: number
 	size: number
 }
+
+export interface CopyBuildInfo {
+	fileNames: string[]
+	fileInfos: CopyFileInfo[]
+	version: string
+}
+
+export type CopyFileInfo = [time: number, size: number, hash: string]

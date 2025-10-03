@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-copy",
 	"description": "A Rollup plugin for copying files during the build process.",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "module",
 	"exports": {
 		".": "./dist/copy-rollup-plugin.js",
@@ -26,10 +26,10 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-copy",
 	"dependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.1.0"
+		"@jsxtools/rollup-plugin-utils": "^0.2.0"
 	},
 	"devDependencies": {
-		"@types/node": "^24.5.2",
+		"@types/node": "^24.6.2",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},
