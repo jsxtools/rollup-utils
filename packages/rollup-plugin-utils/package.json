@@ -1,6 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-utils",
-	"version": "0.2.0",
+	"description": "A collection of utilities for authoring Rollup plugins.",
+	"version": "0.2.1",
 	"type": "module",
 	"exports": {
 		"./array": "./dist/array.js",

@@ -33,9 +33,10 @@ export default {
 ## Features
 
 - Copies files from source to destination with glob pattern support.
-- Only copies files that have changed using content-based comparison.
+- Only copies files that have changed using modification time and SHA-256 hash comparison.
 - Maintains a cache to avoid unnecessary file operations.
-- Handles file changes during development.
+- Handles file additions, changes, and deletions during development.
+- Uses Copy-on-Write (CoW) optimization when available (APFS, Btrfs, XFS).
 - Integrates with Rollup's asset system.
 
 ## Configuration Options
@@ -80,11 +81,13 @@ rollupPluginCopy({
 
 ## Caching
 
-The plugin maintains a cache file (default: `cpconfig.cpbuildinfo`) that tracks file modification times, sizes, and hashes. This enables:
+The plugin maintains a cache file (default: `cpconfig.cpbuildinfo`) that tracks file modification times and SHA-256 hashes. This enables:
 
-- Only changed files are copied
-- Detects content changes even if timestamps are the same
+- Only changed files are copied (based on mtime comparison)
+- Content verification using SHA-256 hashes when mtime differs
+- Detection of removed files for cleanup
 - Minimal file system operations during development
+- Incremental builds with accurate change detection
 
 ## API
 

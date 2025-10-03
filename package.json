@@ -13,6 +13,7 @@
 		"build:watch": "tsc --watch",
 		"clean": "git clean -xdf; rm -rf package-lock.json",
 		"clean:build": "npm run clean:build",
+		"clean:test": "for dir in tests/*/; do (cd $dir && npm run clean); done",
 		"clean:test:copy": "cd tests/rollup-plugin-copy-test && npm run clean && npm test",
 		"clean:test:cem": "cd tests/rollup-plugin-cem-test && npm run clean && npm test",
 		"clean:test:tsc": "cd tests/rollup-plugin-tsc-test && npm run clean && npm test",
@@ -22,6 +23,7 @@
 		"lint:fix": "biome lint --write .",
 		"check": "biome check .",
 		"check:fix": "biome check --write .",
+		"test": "for dir in tests/*/; do (cd $dir && npm test); done",
 		"test:copy": "cd tests/rollup-plugin-copy-test && npm test",
 		"test:cem": "cd tests/rollup-plugin-cem-test && npm test",
 		"test:tsc": "cd tests/rollup-plugin-tsc-test && npm test"

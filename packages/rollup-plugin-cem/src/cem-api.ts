@@ -102,6 +102,7 @@ export class CemAPI {
 	}
 
 	async saveManifest(): Promise<void> {
+		await fs.ensureFileDir(this.manifestFile)
 		await fs.writeFile(this.manifestFile, this.toJSON())
 	}
 

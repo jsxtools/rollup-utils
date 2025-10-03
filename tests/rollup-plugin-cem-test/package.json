@@ -7,7 +7,7 @@
 		"test": "rollup --config"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-cem": "^0.2.0",
+		"@jsxtools/rollup-plugin-cem": "^0.2.2",
 		"@jsxtools/rollup-plugin-tsc": "^0.2.0",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"

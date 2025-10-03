@@ -40,6 +40,7 @@ export class CopyAPI {
 		stash: {
 			cache: {} as Record<string, FileCache>,
 			files: new Map<string, FileCache>(),
+			fileNames: [] as string[],
 			shouldUpdate: false,
 		},
 	}
@@ -119,6 +120,7 @@ export class CopyAPI {
 
 					if (stat.mtimeMs === stashedInfo[0] && stat.size === stashedInfo[1]) {
 						stash.files.set(cachingPath, stashedInfo)
+						stash.fileNames.push(stashedPath)
 					} else {
 						const hash = await fs.hash(stashedPath)
 
@@ -128,11 +130,12 @@ export class CopyAPI {
 						if (stashedInfo[2] !== hash) {
 							stashedInfo[2] = hash
 
-							stash.shouldUpdate = true
-							stash.files.set(cachingPath, stashedInfo)
-
 							const relativePath = path.toRelativePath(paths.rootDir, stashedPath)
 							const targetedPath = path.toPath(paths.distDir, relativePath)
+
+							stash.shouldUpdate = true
+							stash.files.set(cachingPath, stashedInfo)
+							stash.fileNames.push(targetedPath)
 
 							operations.files.push(async () => await fs.copy(stashedPath, targetedPath))
 						}
@@ -152,6 +155,7 @@ export class CopyAPI {
 
 					stash.shouldUpdate = true
 					stash.files.set(cachingPath, [stat.mtimeMs, stat.size, hash])
+					stash.fileNames.push(targetedPath)
 				})
 
 				operations.files.push(async () => await fs.copy(globbedFile, targetedPath))
@@ -168,7 +172,7 @@ export class CopyAPI {
 			cache.fileNames = [...stash.files.keys()]
 			cache.fileInfos = [...stash.files.values()]
 
-			await Promise.all([fs.mkdir(path.toParentURL(paths.cacheFile)), fs.mkdir(paths.distDir)])
+			await fs.ensureFileDir(paths.cacheFile, ...stash.fileNames)
 
 			await Promise.all([fs.writeFile(paths.cacheFile, json.to(cache)), this.#operate(operations.files)])
 		}
