@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-cem",
 	"description": "A Rollup plugin for generating a Custom Elements Manifest file from the Rollup module graph.",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"type": "module",
 	"exports": {
 		".": "./dist/cem-rollup-plugin.js",

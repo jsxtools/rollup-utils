@@ -41,6 +41,10 @@ export class CemAPI {
 		internals.plugins.add(...array.from(internals.options.plugins, str.hasTrimmedValue))
 	}
 
+	get manifestFile(): string {
+		return this.#internals.options.manifestFile
+	}
+
 	get modules(): SourceSet {
 		return this.#internals.modules
 	}
@@ -84,9 +88,7 @@ export class CemAPI {
 	}
 
 	async loadManifest(): Promise<CEM.Package> {
-		const manifest = await fs
-			.readJSON<CEM.Package>(path.toURL(this.options.workDir, this.options.manifestFile))
-			.catch(() => undefined)
+		const manifest = await fs.readJSON<CEM.Package>(this.manifestFile).catch(() => undefined)
 
 		if (manifest?.schemaVersion === "1.0.0") {
 			return manifest
@@ -100,7 +102,7 @@ export class CemAPI {
 	}
 
 	async saveManifest(): Promise<void> {
-		await fs.writeFile(this.options.manifestFile, this.toJSON())
+		await fs.writeFile(this.manifestFile, this.toJSON())
 	}
 
 	async updateManifest(): Promise<void> {
@@ -128,7 +130,7 @@ export class SourceSet extends Set<TS.SourceFile> {
 				continue
 			}
 
-			const relativePath = path.toPath(this.#options.workDir, sourceFile.fileName)
+			const relativePath = path.toPathWithoutBase(sourceFile.fileName, this.#options.workDir)
 
 			// use picomatch to match the file name against the include and exclude patterns
 			const isIncluded = this.#options.include.some((pattern) => picomatch(pattern)(relativePath))
