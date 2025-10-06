@@ -137,7 +137,7 @@ export class CopyAPI {
 							stash.files.set(cachingPath, stashedInfo)
 							stash.fileNames.push(targetedPath)
 
-							operations.files.push(async () => await fs.copy(stashedPath, targetedPath))
+							operations.files.push(async () => await fs.copyFile(stashedPath, targetedPath))
 						}
 					}
 				})
@@ -158,7 +158,7 @@ export class CopyAPI {
 					stash.fileNames.push(targetedPath)
 				})
 
-				operations.files.push(async () => await fs.copy(globbedFile, targetedPath))
+				operations.files.push(async () => await fs.copyFile(globbedFile, targetedPath))
 			}
 		}
 

@@ -76,15 +76,15 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Plugin {
 
 			const result = tsc.compiledSource.get(id)
 
-			if (result) {
-				if (result.dts) {
-					this.emitFile({
-						type: "asset",
-						fileName: result.dts.name,
-						source: result.dts.code,
-					})
-				}
+			if (result?.dts) {
+				this.emitFile({
+					type: "asset",
+					fileName: result.dts.name,
+					source: result.dts.code,
+				})
+			}
 
+			if (result?.jsc) {
 				return {
 					code: result.jsc.code,
 					map: result.map.code,

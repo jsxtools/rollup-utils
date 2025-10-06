@@ -141,6 +141,7 @@ export class TscAPI {
 				return
 			}
 
+			// non js, d.ts, or map files
 			this.emitableSource.set(this.#getSourceFile(sourceFiles).fileName, code)
 		}
 
