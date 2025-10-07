@@ -57,11 +57,11 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Plugin {
 				return virtualResult
 			}
 
-			if (tsc.compiledSource.has(id) || tsc.emitableSource.has(id)) {
+			if (tsc.compiledSource.get(id)?.jsc !== undefined || tsc.emitableSource.has(id)) {
 				return { id }
 			}
 
-			if (importer && tsc.compiledSource.has(importer)) {
+			if (tsc.compiledSource.has(id) || tsc.compiledSource.has(importer as string)) {
 				return { id, external: true }
 			}
 
