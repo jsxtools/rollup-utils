@@ -6,58 +6,77 @@ import { CopyAPI, type CopyOptions } from "./copy-api.js"
 export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => {
 	const copy = new CopyAPI()
 	const virtualAsset = new VirtualAsset("rollup-plugin-copy")
+	const rollup = {
+		/** Whether this is the first run. */
+		firstRun: true,
 
-	let deferred = Promise.resolve()
-	let firstRun = true
-	let watchRun = false
+		/** Whether this is a watch run. */
+		watchRun: false,
+
+		/** Code for the virtual entry point. */
+		codeForVirtualId: "export let _",
+
+		/** Deferred promise used to optimize async operations. */
+		deferred: Promise.resolve(),
+	}
 
 	return {
 		name: "rollup-plugin-copy",
 		options(options: Rollup.RollupOptions): Rollup.RollupOptions {
-			if (firstRun) {
+			if (rollup.firstRun) {
 				copy.init({
 					...getDirs(options),
 					...pluginOptions,
 				})
 
-				deferred = deferred.then(() => copy.loadCache())
+				rollup.deferred = rollup.deferred.then(() => copy.loadCache())
 			}
+
+			virtualAsset.options(options)
 
 			return options
 		},
-		buildStart(options: Rollup.NormalizedInputOptions): void {
-			if (firstRun || watchRun) {
-				deferred = deferred.then(() => copy.updateCache())
-			}
+		buildStart(): void | Promise<void> {
+			if (rollup.firstRun || rollup.watchRun) {
+				rollup.deferred = rollup.deferred.then(() => copy.updateCache())
 
-			virtualAsset.buildStart(this, options)
+				return rollup.deferred
+			}
 		},
-		resolveId(id, importer, options): Rollup.ResolveIdResult {
-			return virtualAsset.resolveId(this, id, importer, options)
+		resolveId(id): Rollup.ResolveIdResult {
+			// conditionally return virtual module source
+			if (id === virtualAsset.virtualId) {
+				return { id }
+			}
 		},
 		load(id): Rollup.LoadResult {
-			return virtualAsset.load(this, id)
+			// conditionally return virtual module source
+			if (id === virtualAsset.virtualId) {
+				return {
+					code: rollup.codeForVirtualId,
+				}
+			}
 		},
 		generateBundle(options, bundle): void {
-			virtualAsset.generateBundle(this, options, bundle)
+			virtualAsset.generateBundle(options, bundle)
+
+			if (this.meta.watchMode) {
+				this.addWatchFile(copy.cacheFile)
+			}
 		},
 		writeBundle(): Promise<void> | void {
-			if (firstRun || watchRun) {
-				firstRun = false
-				watchRun = false
+			if (rollup.firstRun || rollup.watchRun) {
+				rollup.firstRun = false
+				rollup.watchRun = false
 
-				if (this.meta.watchMode) {
-					this.addWatchFile(copy.cacheFile)
-				}
+				rollup.deferred = rollup.deferred.then(() => copy.saveCache())
 
-				deferred = deferred.then(() => copy.saveCache())
-
-				return deferred
+				return rollup.deferred
 			}
 		},
 		watchChange(id): void {
 			if (id === copy.cacheFile) {
-				watchRun = true
+				rollup.watchRun = true
 			}
 		},
 	}

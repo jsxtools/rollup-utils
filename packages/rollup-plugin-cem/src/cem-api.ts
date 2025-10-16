@@ -3,8 +3,8 @@ import * as array from "@jsxtools/rollup-plugin-utils/array"
 import * as fs from "@jsxtools/rollup-plugin-utils/file"
 import * as json from "@jsxtools/rollup-plugin-utils/json"
 import * as path from "@jsxtools/rollup-plugin-utils/path"
+import { match } from "@jsxtools/rollup-plugin-utils/pattern"
 import * as str from "@jsxtools/rollup-plugin-utils/string"
-import picomatch from "picomatch"
 
 const enum Default {
 	ManifestFile = "custom-elements.json",
@@ -131,16 +131,16 @@ export class SourceSet extends Set<TS.SourceFile> {
 				continue
 			}
 
-			const relativePath = path.toPathWithoutBase(sourceFile.fileName, this.#options.workDir)
+			const relativePath = path.toRelativePath(sourceFile.fileName, this.#options.workDir, { explicit: false })
 
 			// use picomatch to match the file name against the include and exclude patterns
-			const isIncluded = this.#options.include.some((pattern) => picomatch(pattern)(relativePath))
+			const isIncluded = this.#options.include.some((pattern) => match(pattern, relativePath))
 
 			if (!isIncluded) {
 				continue
 			}
 
-			const isExcluded = this.#options.exclude.some((pattern) => picomatch(pattern)(sourceFile.fileName))
+			const isExcluded = this.#options.exclude.some((pattern) => match(pattern, sourceFile.fileName))
 
 			if (isExcluded) {
 				continue

@@ -1,48 +1,97 @@
 import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset"
-import type { LoadResult, Plugin, ResolveIdResult } from "rollup"
-import { type SourceFile, TscAPI, type TscApiOptions } from "./tsc-api.js"
+import type * as Rollup from "rollup"
+import { type CompiledSource, type Source, TscAPI, type TscApiOptions } from "./tsc-api.js"
 
-export function rollupPluginTsc(pluginOptions?: TscApiOptions): Plugin {
+export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
+	const virtualAsset = new VirtualAsset("rollup-plugin-tsc")
+
 	const tsc = new TscAPI()
 
-	const virtualAsset = new VirtualAsset("rollup-plugin-tsc", {
-		load() {
-			const compiledSources = [...tsc.compiledSource.keys()]
+	const rollup = {
+		/** Whether this is the first run. */
+		firstRun: true,
 
-			const code = compiledSources.map((file, i) => `import * as mod${i} from ${JSON.stringify(file)}`).join(";")
+		/** Whether this is a watch run. */
+		watchRun: false,
 
-			return {
-				code,
-			}
+		/** Code for the virtual entry point. */
+		codeForVirtualId: "export let _",
+
+		/** Emit a source file to the rollup pipeline if it exists. */
+		emitFileFromSource(context: Rollup.PluginContext, source: Source): string {
+			return context.emitFile({
+				type: "asset",
+				fileName: source.name,
+				source: source.code,
+			})
 		},
-	})
 
-	let firstRun = true
-	let watchRun = false
+		/** Returns the code for the virtual entry point. */
+		getSourceForVirtualId(): string {
+			return Array.from(tsc.compiledSource, ([path, compiledSource], index) => {
+				if (compiledSource.js) {
+					return `import * as mod${index} from ${JSON.stringify(path)}`
+				}
+
+				return ""
+			}).join(";")
+		},
+
+		/** Return the load result for the compiled source. */
+		getResultFromCompiledSource(
+			context: Rollup.PluginContext,
+			compiled: CompiledSource,
+		): Rollup.SourceDescription | null {
+			// emit d.ts file
+			if (compiled.dts) {
+				rollup.emitFileFromSource(context, compiled.dts)
+			}
+
+			// emit d.ts.map file
+			if (compiled.dtsMap) {
+				rollup.emitFileFromSource(context, compiled.dtsMap)
+			}
+
+			// emit js.map (if js source is not available)
+			if (compiled.jsMap && !compiled.js) {
+				rollup.emitFileFromSource(context, compiled.jsMap)
+			}
+
+			// return js source (if it is available)
+			if (compiled.js) {
+				return {
+					code: compiled.js.code,
+					map: compiled.jsMap?.code,
+					moduleSideEffects: false,
+
+					// attach TypeScript SourceFile for other plugins to use
+					meta: {
+						tsc: {
+							sourceFile: compiled.sourceFile,
+						},
+					},
+				}
+			}
+
+			return null
+		},
+	}
 
 	return {
 		name: "rollup-plugin-tsc",
-		buildStart(options): void {
-			if (firstRun) {
+		options(options: Rollup.RollupOptions) {
+			virtualAsset.options(options)
+		},
+		buildStart(): void {
+			if (rollup.firstRun) {
 				tsc.init(pluginOptions)
 			}
 
-			if (firstRun || watchRun) {
+			if (rollup.firstRun || rollup.watchRun) {
 				tsc.emit()
 
-				// Create map of ids to SourceFiles
-				const sourceFileMap = new Map<string, SourceFile>()
-				for (const [id, compiledSource] of tsc.compiledSource) {
-					sourceFileMap.set(id, compiledSource.tsf)
-				}
-
-				// Namespace under plugin name to avoid conflicts
-				Reflect.set(this.meta, "rollupPluginTsc", {
-					sourceFileMap,
-				})
+				rollup.codeForVirtualId = rollup.getSourceForVirtualId()
 			}
-
-			virtualAsset.buildStart(this, options)
 
 			if (this.meta.watchMode) {
 				for (const sourceFile of tsc.program.getProgram().getSourceFiles()) {
@@ -50,76 +99,58 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Plugin {
 				}
 			}
 		},
-		resolveId(id, importer, options): ResolveIdResult {
-			const virtualResult = virtualAsset.resolveId(this, id, importer, options)
-
-			if (virtualResult) {
-				return virtualResult
-			}
-
-			if (tsc.compiledSource.get(id)?.jsc !== undefined || tsc.emitableSource.has(id)) {
+		resolveId(id, importer): Rollup.ResolveIdResult {
+			// conditionally resolve virtual entry point
+			if (id === virtualAsset.virtualId) {
 				return { id }
 			}
 
+			// conditionally resolve compiled source
+			if (tsc.compiledSource.get(id)?.js !== undefined || tsc.emitableSource.has(id)) {
+				return { id }
+			}
+
+			// conditionally resolve external source
 			if (tsc.compiledSource.has(id) || tsc.compiledSource.has(importer as string)) {
 				return { id, external: true }
 			}
-
-			return null
 		},
-		load(id): LoadResult {
-			const virtualResult = virtualAsset.load(this, id)
-
-			if (virtualResult) {
-				return virtualResult
-			}
-
-			const result = tsc.compiledSource.get(id)
-
-			if (result?.dts) {
-				this.emitFile({
-					type: "asset",
-					fileName: result.dts.name,
-					source: result.dts.code,
-				})
-			}
-
-			if (result?.jsc) {
+		load(id): Rollup.LoadResult {
+			// conditionally return virtual module source
+			if (id === virtualAsset.virtualId) {
 				return {
-					code: result.jsc.code,
-					map: result.map.code,
-					moduleSideEffects: false,
-
-					// attach the TypeScript SourceFile for other plugins to use
-					meta: {
-						tsc: {
-							sourceFile: result.tsf,
-						},
-					},
+					code: rollup.codeForVirtualId,
 				}
 			}
 
+			// conditionally return emitable source
 			if (tsc.emitableSource.has(id)) {
 				return {
 					code: `export default ${JSON.stringify(tsc.emitableSource.get(id))}`,
 				}
 			}
 
-			return null
-		},
-		generateBundle(_options, bundle): void {
-			firstRun = false
-			watchRun = false
+			/** Compiled source for the module id. */
+			const compiled = tsc.compiledSource.get(id)
 
-			virtualAsset.generateBundle(this, _options, bundle)
+			// conditionally return compiled source
+			if (compiled) {
+				return rollup.getResultFromCompiledSource(this, compiled)
+			}
 		},
-		async writeBundle(): Promise<void> {
+		generateBundle(options, bundle): void {
+			rollup.firstRun = false
+			rollup.watchRun = false
+
+			virtualAsset.generateBundle(options, bundle)
+		},
+		writeBundle(): void {
 			tsc.writeEmitableAssets()
 		},
 		watchChange(id, event): void {
 			if (tsc.config.fileNames.includes(id)) {
 				if (event.event === "update") {
-					watchRun = true
+					rollup.watchRun = true
 				}
 			}
 		},

@@ -1,17 +1,10 @@
 {
-	"name": "@jsxtools/rollup-plugin-utils",
+	"name": "@jsxtools/file-system",
 	"description": "A collection of utilities for authoring Rollup plugins.",
-	"version": "0.3.0",
+	"version": "0.0.0",
 	"type": "module",
 	"exports": {
-		"./array": "./dist/array.js",
-		"./file": "./dist/file.js",
-		"./json": "./dist/json.js",
-		"./options": "./dist/options.js",
-		"./path": "./dist/path.js",
-		"./pattern": "./dist/pattern.js",
-		"./string": "./dist/string.js",
-		"./virtual-asset": "./dist/virtual-asset.js"
+		".": "./dist/file-system.js"
 	},
 	"files": [
 		"dist"
@@ -28,15 +21,14 @@
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/jsxtools/rollup-utils.git",
-		"directory": "packages/rollup-plugin-utils"
+		"directory": "packages/file-system"
 	},
-	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-utils",
+	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/file-system",
 	"devDependencies": {
+		"nsfw": "^2.2.5",
 		"@types/node": "^24.6.2",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},
-	"peerDependencies": {
-		"rollup": "^4.6.0"
-	}
+	"private": true
 }

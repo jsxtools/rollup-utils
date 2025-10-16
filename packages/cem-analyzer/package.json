@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/cem-analyzer",
 	"description": "A typed release of the Custom Elements Manifest analyzer.",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"type": "module",
 	"exports": {
 		"./*": "./dist/*.js"
@@ -26,12 +26,12 @@
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/cem-analyzer",
 	"dependencies": {
 		"custom-elements-manifest": "^1.0.0",
-		"@github/catalyst": "^1.6.0",
-		"comment-parser": "^1.2.4"
+		"@github/catalyst": "^1.7.0",
+		"comment-parser": "^1.4.1"
 	},
 	"devDependencies": {
 		"@custom-elements-manifest/analyzer": "^0.10.10",
-		"@jsxtools/rollup-plugin-utils": "^0.2.1",
+		"@jsxtools/rollup-plugin-utils": "^0.3.0",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},

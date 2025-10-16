@@ -91,7 +91,7 @@ export class TscAPI {
 
 		this.#program = this.program.getProgram()
 
-		this.distDir = this.program.getCompilerOptions().outDir ?? path.toDirPath(this.workDir ?? this.rootDir)
+		this.distDir = path.toDirPath(this.program.getCompilerOptions().outDir ?? this.workDir ?? this.rootDir)
 
 		this.#outputToSource.clear()
 		this.compiledSource.clear()
@@ -114,34 +114,47 @@ export class TscAPI {
 				return
 			}
 
-			if (outputFileName.endsWith(".js")) {
-				this.#getCompiledSource(sourceFiles).jsc = {
-					name: path.toPathWithoutBase(outputFileName, this.distDir),
-					code,
-				}
-
-				return
-			}
-
+			// store declaration source
 			if (outputFileName.endsWith(".d.ts")) {
 				this.#getCompiledSource(sourceFiles).dts = {
-					name: path.toPathWithoutBase(outputFileName, this.distDir),
+					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
 				}
 
 				return
 			}
 
+			// store declaration sourcemap
+			if (outputFileName.endsWith(".d.ts.map")) {
+				this.#getCompiledSource(sourceFiles).dtsMap = {
+					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
+					code,
+				}
+
+				return
+			}
+
+			// store javascript source
+			if (outputFileName.endsWith(".js")) {
+				this.#getCompiledSource(sourceFiles).js = {
+					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
+					code,
+				}
+
+				return
+			}
+
+			// store javascript sourcemap
 			if (outputFileName.endsWith(".map")) {
-				this.#getCompiledSource(sourceFiles).map = {
-					name: path.toPathWithoutBase(outputFileName, this.distDir),
+				this.#getCompiledSource(sourceFiles).jsMap = {
+					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
 				}
 
 				return
 			}
 
-			// non js, d.ts, or map files
+			// store non js, d.ts, or map files
 			this.emitableSource.set(this.#getSourceFile(sourceFiles).fileName, code)
 		}
 
@@ -179,7 +192,7 @@ export class TscAPI {
 			this.compiledSource.set(sourceFile.fileName, compiledSource)
 		}
 
-		compiledSource.tsf ??= sourceFile
+		compiledSource.sourceFile ??= sourceFile
 
 		return compiledSource
 	}
@@ -197,13 +210,19 @@ export interface TscApiOptions {
 
 export interface CompiledSource {
 	/** TypeScript declaration source. */
-	dts: Source
+	dts?: Source
+
+	/** TypeScript declaration sourcemap. */
+	dtsMap?: Source
+
 	/** Compiled JavaScript source. */
-	jsc: Source
-	/** Compiled JavaScript sourcemap source. */
-	map: Source
+	js?: Source
+
+	/** Compiled JavaScript sourcemap. */
+	jsMap?: Source
+
 	/** SourceFile object of the original TypeScript. */
-	tsf: SourceFile
+	sourceFile: SourceFile
 }
 
 export interface Source {

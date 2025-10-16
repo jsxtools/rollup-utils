@@ -109,7 +109,7 @@ export class CopyAPI {
 		stash.shouldUpdate = false
 
 		for (const [stashedPath, stashedInfo] of Object.entries(stash.cache)) {
-			const cachingPath = path.toRelativePath(paths.workDir, stashedPath)
+			const cachingPath = path.toRelativePath(stashedPath, paths.workDir)
 
 			if (!globbedFiles.includes(stashedPath)) {
 				stash.shouldUpdate = true
@@ -130,8 +130,8 @@ export class CopyAPI {
 						if (stashedInfo[2] !== hash) {
 							stashedInfo[2] = hash
 
-							const relativePath = path.toRelativePath(paths.rootDir, stashedPath)
-							const targetedPath = path.toPath(paths.distDir, relativePath)
+							const relativePath = path.toRelativePath(stashedPath, paths.rootDir)
+							const targetedPath = path.toPath(relativePath, paths.distDir)
 
 							stash.shouldUpdate = true
 							stash.files.set(cachingPath, stashedInfo)
@@ -146,8 +146,8 @@ export class CopyAPI {
 
 		for (const globbedFile of globbedFiles) {
 			if (!Object.hasOwn(stash.cache, globbedFile)) {
-				const cachingPath = path.toRelativePath(paths.workDir, globbedFile)
-				const relativePath = path.toRelativePath(paths.rootDir, globbedFile)
+				const cachingPath = path.toRelativePath(globbedFile, paths.workDir)
+				const relativePath = path.toRelativePath(globbedFile, paths.rootDir)
 				const targetedPath = path.toPath(paths.distDir, relativePath)
 
 				operations.cache.push(async () => {
@@ -178,8 +178,20 @@ export class CopyAPI {
 		}
 	}
 
+	get rootDir(): string {
+		return this.#internals.paths.rootDir.pathname
+	}
+
+	get distDir(): string {
+		return this.#internals.paths.distDir.pathname
+	}
+
+	get stashedFiles(): string[] {
+		return this.#internals.stash.fileNames
+	}
+
 	async #operate(operations: FileOperation[]): Promise<void> {
-		await Promise.all(operations.splice(0).map(operate))
+		await Promise.all(operations.map(operate))
 	}
 }
 

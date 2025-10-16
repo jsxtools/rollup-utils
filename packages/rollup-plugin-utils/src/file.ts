@@ -13,15 +13,6 @@ import * as path from "./path.js"
 
 export { readFile, stat as getFileStats, unlink as deleteFile, writeFile } from "node:fs/promises"
 
-/** Copies a file using the fastest method available. @deprecated */
-export const copy = async (src: PathLike, dest: PathLike): Promise<void> => {
-	try {
-		return await fsCopyFile(src, dest, fsConstants.COPYFILE_FICLONE)
-	} catch {
-		return await fsCopyFile(src, dest)
-	}
-}
-
 /** Copies a file using the fastest method available. */
 export const copyFile = async (src: PathLike, dest: PathLike): Promise<void> => {
 	try {

@@ -1,0 +1,14 @@
+{
+	"name": "@jsxtools/rollup-plugin-utils.test",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"clean": "",
+		"test": "node --test",
+		"test:coverage": "node --test --experimental-test-coverage"
+	},
+	"devDependencies": {
+		"@jsxtools/rollup-plugin-tsc": "^0.3.0",
+		"rollup": "^4.6.0"
+	}
+}

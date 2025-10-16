@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-tsc",
 	"description": "A Rollup plugin for compiling TypeScript files with the TypeScript Compiler API.",
-	"version": "0.2.3",
+	"version": "0.3.0",
 	"type": "module",
 	"exports": {
 		".": "./dist/tsc-rollup-plugin.js",
@@ -26,7 +26,7 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-tsc",
 	"dependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.2.1"
+		"@jsxtools/rollup-plugin-utils": "^0.3.0"
 	},
 	"devDependencies": {
 		"@types/node": "^24.6.2",

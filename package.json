@@ -19,6 +19,7 @@
 		"clean:test:copy": "cd tests/rollup-plugin-copy-test && npm run clean && npm test",
 		"clean:test:cem": "cd tests/rollup-plugin-cem-test && npm run clean && npm test",
 		"clean:test:tsc": "cd tests/rollup-plugin-tsc-test && npm run clean && npm test",
+		"clean:test:utils": "cd tests/rollup-plugin-utils-test && npm run clean && npm test",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"lint": "biome lint .",
@@ -29,11 +30,12 @@
 		"test:copy": "cd tests/rollup-plugin-copy-test && npm test",
 		"test:cem": "cd tests/rollup-plugin-cem-test && npm test",
 		"test:tsc": "cd tests/rollup-plugin-tsc-test && npm test",
+		"test:utils": "cd tests/rollup-plugin-utils-test && npm test",
 		"typecheck": "tsc --build --noEmit"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.5",
-		"@types/node": "^24.7.0",
+		"@biomejs/biome": "^2.2.6",
+		"@types/node": "^24.7.2",
 		"typescript": "^5.4.5"
 	}
 }

@@ -7,7 +7,7 @@
 		"test": "rollup --config"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-copy": "^0.2.2",
+		"@jsxtools/rollup-plugin-copy": "^0.3.0",
 		"rollup": "^4.6.0"
 	}
 }
