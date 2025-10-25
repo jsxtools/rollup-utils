@@ -1,6 +1,6 @@
 {
 	"name": "@jsxtools/file-system",
-	"description": "A collection of utilities for authoring Rollup plugins.",
+	"description": "A collection of utilities for working with the file system.",
 	"version": "0.0.0",
 	"type": "module",
 	"exports": {
@@ -14,6 +14,7 @@
 		"clean": "rm -rf dist tsconfig.tsbuildinfo",
 		"clean:build": "rm -rf dist tsconfig.tsbuildinfo && tsc",
 		"clean:watch": "rm -rf dist tsconfig.tsbuildinfo && tsc --watch",
+		"test": "node --test tests/*.test.js",
 		"watch": "tsc --watch"
 	},
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
