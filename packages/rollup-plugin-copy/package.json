@@ -29,7 +29,7 @@
 		"@jsxtools/rollup-plugin-utils": "^0.3.0"
 	},
 	"devDependencies": {
-		"@types/node": "^24.6.2",
+		"@types/node": "^24.9.1",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},

@@ -32,7 +32,7 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-utils",
 	"devDependencies": {
-		"@types/node": "^24.6.2",
+		"@types/node": "^24.9.1",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},
