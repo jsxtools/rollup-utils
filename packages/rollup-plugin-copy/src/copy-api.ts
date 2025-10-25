@@ -131,7 +131,7 @@ export class CopyAPI {
 							stashedInfo[2] = hash
 
 							const relativePath = path.toRelativePath(stashedPath, paths.rootDir)
-							const targetedPath = path.toPath(relativePath, paths.distDir)
+							const targetedPath = path.toPath(paths.distDir, relativePath)
 
 							stash.shouldUpdate = true
 							stash.files.set(cachingPath, stashedInfo)
