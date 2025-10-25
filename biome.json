@@ -25,9 +25,10 @@
 			"style": {
 				"noNonNullAssertion": "off",
 				"noUnusedTemplateLiteral": "error",
-				"useTemplate": "error"
+				"useTemplate": "off"
 			},
 			"complexity": {
+				"noBannedTypes": "off",
 				"noCommaOperator": "off",
 				"noThisInStatic": "off"
 			},
