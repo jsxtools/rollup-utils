@@ -8,7 +8,7 @@
 		"test:coverage": "node --test --experimental-test-coverage"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-tsc": "^0.3.0",
+		"@jsxtools/rollup-plugin-tsc": "^0.3.2",
 		"rollup": "^4.6.0"
 	}
 }

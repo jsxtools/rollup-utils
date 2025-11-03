@@ -22,9 +22,24 @@ export class TscAPI {
 
 	host!: ts.CompilerHost
 	program!: ts.EmitAndSemanticDiagnosticsBuilderProgram
-	config!: ts.ParsedCommandLine
-	result!: ts.EmitResult
+
+	config: ts.ParsedCommandLine = {
+		errors: [],
+		fileNames: [],
+		options: {},
+	}
+
+	result: ts.EmitResult = {
+		emitSkipped: true,
+		diagnostics: [],
+		emittedFiles: [],
+	}
+
+	/** TypeScript semantic and syntactic diagnostics. */
 	diagnostics: ts.Diagnostic[] = []
+
+	/** Custom AST transformers. */
+	customTransformers: ts.CustomTransformers = {}
 
 	#program!: ts.Program
 
@@ -50,6 +65,21 @@ export class TscAPI {
 
 		if (Array.isArray(options?.references)) {
 			configData.references = array.merge(configData.references, options.references)
+		}
+
+		// update custom transformers
+		this.customTransformers = {};
+
+		if (Array.isArray(options?.customTransformers?.before)) {
+			this.customTransformers.before = [ ...options.customTransformers.before ]
+		}
+
+		if (Array.isArray(options?.customTransformers?.after)) {
+			this.customTransformers.after = [ ...options.customTransformers.after ]
+		}
+
+		if (Array.isArray(options?.customTransformers?.afterDeclarations)) {
+			this.customTransformers.afterDeclarations = [ ...options.customTransformers.afterDeclarations ]
 		}
 
 		this.configFile = configFile
@@ -160,9 +190,9 @@ export class TscAPI {
 			this.emitableSource.set(this.#getSourceFile(sourceFiles).fileName, code)
 		}
 
-		this.result = this.program.emit(undefined, writeFile)
+		this.result = this.program.emit(undefined, writeFile, undefined, undefined, this.customTransformers)
 
-		// Collect semantic and syntactic diagnostics
+		// combined semantic and syntactic diagnostics
 		this.diagnostics = [...this.program.getSyntacticDiagnostics(), ...this.program.getSemanticDiagnostics()]
 
 		return !this.result.emitSkipped
@@ -208,6 +238,7 @@ export interface TscApiOptions {
 	configFile?: string
 
 	compilerOptions?: ts.CompilerOptions
+	customTransformers?: ts.CustomTransformers
 	exclude?: string[]
 	include?: string[]
 	references?: ts.ProjectReference[]

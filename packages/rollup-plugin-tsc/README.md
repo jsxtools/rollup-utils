@@ -29,6 +29,7 @@ export default {
 - Supports source map generation and `.d.ts` file emission alongside JavaScript output.
 - Handles TypeScript assets and build artifacts (like `.json` imports).
 - Supports custom TypeScript configurations and compiler options.
+- Supports TypeScript [Custom Transformers](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#customtransformers) for advanced AST transformations.
 - Exposes TypeScript `SourceFile` objects for other plugins.
 - Supports file watching for development builds.
 
@@ -38,6 +39,7 @@ export default {
 - `include` - Additional files to [include](https://www.typescriptlang.org/tsconfig/#include) in compilation.
 - `exclude` - Additional files to [exclude](https://www.typescriptlang.org/tsconfig/#exclude) from compilation.
 - `compilerOptions` - Additional TypeScript [compiler options](https://www.typescriptlang.org/tsconfig).
+- `customTransformers` - TypeScript [Custom Transformers](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API#customtransformers) for AST transformations.
 - `references` - TypeScript project [references](https://www.typescriptlang.org/tsconfig/#references).
 - `workDir` - Current working directory (default: current process directory).
 
@@ -48,6 +50,9 @@ rollupPluginTsc({
   compilerOptions: {
     declaration: true,
     sourceMap: true,
+  },
+  customTransformers: {
+    before: [myCustomTransformer],
   },
   include: [
     "src/**/*.ts",
