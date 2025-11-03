@@ -24,6 +24,7 @@ export class TscAPI {
 	program!: ts.EmitAndSemanticDiagnosticsBuilderProgram
 	config!: ts.ParsedCommandLine
 	result!: ts.EmitResult
+	diagnostics: ts.Diagnostic[] = []
 
 	#program!: ts.Program
 
@@ -97,6 +98,7 @@ export class TscAPI {
 		this.compiledSource.clear()
 		this.emitableAssets.clear()
 		this.emitableSource.clear()
+		this.diagnostics = []
 
 		for (const sourceFileName of this.config.fileNames) {
 			const outputFileNames = ts.getOutputFileNames(this.config, sourceFileName, false)
@@ -159,6 +161,9 @@ export class TscAPI {
 		}
 
 		this.result = this.program.emit(undefined, writeFile)
+
+		// Collect semantic and syntactic diagnostics
+		this.diagnostics = [...this.program.getSyntacticDiagnostics(), ...this.program.getSemanticDiagnostics()]
 
 		return !this.result.emitSkipped
 	}

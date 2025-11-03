@@ -1,5 +1,6 @@
 import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset"
 import type * as Rollup from "rollup"
+import * as ts from "typescript"
 import { type CompiledSource, type Source, TscAPI, type TscApiOptions } from "./tsc-api.js"
 
 export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
@@ -89,6 +90,25 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 
 			if (rollup.firstRun || rollup.watchRun) {
 				tsc.emit()
+
+				// Surface TypeScript diagnostics as errors
+				for (const diagnostic of tsc.diagnostics) {
+					const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
+					const location =
+						diagnostic.file && diagnostic.start
+							? {
+									file: diagnostic.file.fileName,
+									line: diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start).line + 1,
+									column:
+										diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start).character + 1,
+								}
+							: undefined
+
+					this.error({
+						message,
+						loc: location,
+					});
+				}
 
 				rollup.codeForVirtualId = rollup.getSourceForVirtualId()
 			}
