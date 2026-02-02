@@ -1,3 +1,3 @@
-import type { Plugin } from "../../../create.js"
+import type { Plugin } from "../../../create.js";
 
-export declare function stencilPlugin(): Plugin
+export declare function stencilPlugin(): Plugin;

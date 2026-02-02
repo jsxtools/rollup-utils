@@ -13,13 +13,11 @@ npm install @jsxtools/rollup-plugin-tsc
 ## Usage
 
 ```javascript
-import { rollupPluginTsc } from '@jsxtools/rollup-plugin-tsc'
+import { rollupPluginTsc } from "@jsxtools/rollup-plugin-tsc";
 
 export default {
-  plugins: [
-    rollupPluginTsc(/* optional configuration */)
-  ]
-}
+	plugins: [rollupPluginTsc(/* optional configuration */)],
+};
 ```
 
 ## Features
@@ -45,22 +43,18 @@ export default {
 
 ```js
 rollupPluginTsc({
-  workDir: ".",
-  configFile: "tsconfig.json",
-  compilerOptions: {
-    declaration: true,
-    sourceMap: true,
-  },
-  customTransformers: {
-    before: [myCustomTransformer],
-  },
-  include: [
-    "src/**/*.ts",
-  ],
-  exclude: [
-    "src/**/*.test.ts",
-  ],
-})
+	workDir: ".",
+	configFile: "tsconfig.json",
+	compilerOptions: {
+		declaration: true,
+		sourceMap: true,
+	},
+	customTransformers: {
+		before: [myCustomTransformer],
+	},
+	include: ["src/**/*.ts"],
+	exclude: ["src/**/*.test.ts"],
+});
 ```
 
 ## Integration
@@ -72,7 +66,7 @@ rollupPluginTsc({
 const sourceFile = this.getModuleInfo(id)?.meta?.tsc?.sourceFile;
 
 if (sourceFile) {
-  void sourceFile // access the ts.SourceFile object associated with this module
+	void sourceFile; // access the ts.SourceFile object associated with this module
 }
 ```
 
@@ -81,7 +75,7 @@ if (sourceFile) {
 The plugin also exports a separate API for programmatic use:
 
 ```javascript
-import { TscAPI } from '@jsxtools/rollup-plugin-tsc/api';
+import { TscAPI } from "@jsxtools/rollup-plugin-tsc/api";
 ```
 
 ## Peer Dependencies

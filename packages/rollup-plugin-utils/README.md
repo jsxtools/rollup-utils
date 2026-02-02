@@ -15,14 +15,14 @@ npm install @jsxtools/rollup-plugin-utils
 This package provides several utility modules that can be imported individually:
 
 ```javascript
-import * as fs from '@jsxtools/rollup-plugin-utils/file'
-import * as arr from '@jsxtools/rollup-plugin-utils/array'
-import * as json from '@jsxtools/rollup-plugin-utils/json'
-import * as str from '@jsxtools/rollup-plugin-utils/string'
-import * as path from '@jsxtools/rollup-plugin-utils/path'
+import * as fs from "@jsxtools/rollup-plugin-utils/file";
+import * as arr from "@jsxtools/rollup-plugin-utils/array";
+import * as json from "@jsxtools/rollup-plugin-utils/json";
+import * as str from "@jsxtools/rollup-plugin-utils/string";
+import * as path from "@jsxtools/rollup-plugin-utils/path";
 
-import { VirtualAsset } from '@jsxtools/rollup-plugin-utils/virtual-asset'
-import { toArray, toMergedArray, assignInput } from '@jsxtools/rollup-plugin-utils/options'
+import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset";
+import { toArray, toMergedArray, assignInput } from "@jsxtools/rollup-plugin-utils/options";
 ```
 
 ## Available Utilities
@@ -32,32 +32,32 @@ import { toArray, toMergedArray, assignInput } from '@jsxtools/rollup-plugin-uti
 A utility class for managing virtual assets in Rollup builds. The constructor takes a required `id` string as the first parameter and automatically generates virtual module IDs using Rollup built-ins.
 
 ```javascript
-import { VirtualAsset } from '@jsxtools/rollup-plugin-utils/virtual-asset'
+import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset";
 
 const virtualAsset = new VirtualAsset("my-virtual-asset", {
-  load(context, id) {
-    if (id === this.virtualId) {
-      return { code: 'export const data = "virtual";' }
-    }
-  }
-})
+	load(context, id) {
+		if (id === this.virtualId) {
+			return { code: 'export const data = "virtual";' };
+		}
+	},
+});
 
 // Use in a plugin
 export default {
-  name: 'my-plugin',
-  buildStart(options) {
-    virtualAsset.buildStart(this, options)
-  },
-  resolveId(id, importer, options) {
-    return virtualAsset.resolveId(this, id, importer, options)
-  },
-  load(id) {
-    return virtualAsset.load(this, id)
-  },
-  generateBundle(options, bundle) {
-    virtualAsset.generateBundle(this, options, bundle)
-  }
-}
+	name: "my-plugin",
+	buildStart(options) {
+		virtualAsset.buildStart(this, options);
+	},
+	resolveId(id, importer, options) {
+		return virtualAsset.resolveId(this, id, importer, options);
+	},
+	load(id) {
+		return virtualAsset.load(this, id);
+	},
+	generateBundle(options, bundle) {
+		virtualAsset.generateBundle(this, options, bundle);
+	},
+};
 ```
 
 ### File Utilities
@@ -65,29 +65,29 @@ export default {
 Utilities for file operations including hashing, copying, globbing, and reading.
 
 ```javascript
-import { hash, copyFile, glob, readJSON, ensureFileDir } from '@jsxtools/rollup-plugin-utils/file'
+import { hash, copyFile, glob, readJSON, ensureFileDir } from "@jsxtools/rollup-plugin-utils/file";
 
 // Generate SHA-256 hash of a file
-const fileHash = await hash('path/to/file.js')
-console.log(fileHash) // "a1b2c3d4e5f6..."
+const fileHash = await hash("path/to/file.js");
+console.log(fileHash); // "a1b2c3d4e5f6..."
 
 // Copy file with CoW optimization when available
-await copyFile('src/file.js', 'dist/file.js')
+await copyFile("src/file.js", "dist/file.js");
 
 // Glob for files
 for await (const filePath of glob({
-  include: '**/*.js',
-  exclude: '**/*.test.js',
-  cwd: new URL('.', import.meta.url)
+	include: "**/*.js",
+	exclude: "**/*.test.js",
+	cwd: new URL(".", import.meta.url),
 })) {
-  console.log(filePath)
+	console.log(filePath);
 }
 
 // Read and parse JSON file
-const config = await readJSON('config.json')
+const config = await readJSON("config.json");
 
 // Ensure directory exists for files
-await ensureFileDir('dist/nested/file.js', 'dist/other/file.js')
+await ensureFileDir("dist/nested/file.js", "dist/other/file.js");
 ```
 
 ### Array Utilities
@@ -116,15 +116,15 @@ const allStrings = every(['a', 'b'], (x): x is string => typeof x === 'string') 
 Utilities for JSON parsing and stringification with error handling.
 
 ```javascript
-import { from, to } from '@jsxtools/rollup-plugin-utils/json'
+import { from, to } from "@jsxtools/rollup-plugin-utils/json";
 
 // Parse JSON safely (returns undefined on error)
-const data = from('{"key": "value"}') // { key: 'value' }
-const invalid = from('invalid json') // undefined
+const data = from('{"key": "value"}'); // { key: 'value' }
+const invalid = from("invalid json"); // undefined
 
 // Stringify JSON
-const json = to({ key: 'value' }) // '{"key":"value"}'
-const pretty = to({ key: 'value' }, null, 2) // formatted with 2 spaces
+const json = to({ key: "value" }); // '{"key":"value"}'
+const pretty = to({ key: "value" }, null, 2); // formatted with 2 spaces
 ```
 
 ### String Utilities
@@ -132,18 +132,18 @@ const pretty = to({ key: 'value' }, null, 2) // formatted with 2 spaces
 Utilities for string manipulation and validation.
 
 ```javascript
-import { from, trim, hasTrimmedValue } from '@jsxtools/rollup-plugin-utils/string'
+import { from, trim, hasTrimmedValue } from "@jsxtools/rollup-plugin-utils/string";
 
 // Convert to string (null/undefined becomes empty string)
-const str = from('hello') // 'hello'
-const empty = from(null) // ''
+const str = from("hello"); // 'hello'
+const empty = from(null); // ''
 
 // Trim string
-const trimmed = trim('  hello  ') // 'hello'
+const trimmed = trim("  hello  "); // 'hello'
 
 // Check if string has non-empty trimmed value
 if (hasTrimmedValue(input)) {
-  // TypeScript knows input is a non-empty string
+	// TypeScript knows input is a non-empty string
 }
 ```
 
@@ -152,24 +152,24 @@ if (hasTrimmedValue(input)) {
 Utilities for handling plugin options.
 
 ```javascript
-import { toArray, toMergedArray, assignInput } from '@jsxtools/rollup-plugin-utils/options'
+import { toArray, toMergedArray, assignInput } from "@jsxtools/rollup-plugin-utils/options";
 
 // Convert single values or arrays to arrays
-const files = toArray('file.js') // ['file.js']
-const moreFiles = toArray(['a.js', 'b.js']) // ['a.js', 'b.js']
-const noFiles = toArray(null) // []
+const files = toArray("file.js"); // ['file.js']
+const moreFiles = toArray(["a.js", "b.js"]); // ['a.js', 'b.js']
+const noFiles = toArray(null); // []
 
 // Merge arrays safely
-const merged = toMergedArray(['a.js'], ['b.js']) // ['a.js', 'b.js']
-const withNulls = toMergedArray(null, ['b.js']) // ['b.js']
+const merged = toMergedArray(["a.js"], ["b.js"]); // ['a.js', 'b.js']
+const withNulls = toMergedArray(null, ["b.js"]); // ['b.js']
 
 // Add input to Rollup options
 const plugin = {
-  name: 'my-plugin',
-  buildStart(options) {
-    assignInput(options.input, "src/another-file.js")
-  }
-}
+	name: "my-plugin",
+	buildStart(options) {
+		assignInput(options.input, "src/another-file.js");
+	},
+};
 ```
 
 ### Path
@@ -177,23 +177,20 @@ const plugin = {
 Path resolution and manipulation utilities using URL objects.
 
 ```javascript
-import { toURL, toDirURL, toRelativePath, toParentURL } from '@jsxtools/rollup-plugin-utils/path'
+import { toURL, toDirURL, toRelativePath, toParentURL } from "@jsxtools/rollup-plugin-utils/path";
 
 // Convert to URL (absolute path)
-const fileUrl = toURL('src', 'index.js') // URL { href: 'file:///absolute/path/to/src/index.js' }
+const fileUrl = toURL("src", "index.js"); // URL { href: 'file:///absolute/path/to/src/index.js' }
 
 // Convert to directory URL (with trailing slash)
-const srcDir = toDirURL('src') // URL { href: 'file:///absolute/path/to/src/' }
-const distDir = toDirURL('dist', 'assets') // URL { href: 'file:///absolute/path/to/dist/assets/' }
+const srcDir = toDirURL("src"); // URL { href: 'file:///absolute/path/to/src/' }
+const distDir = toDirURL("dist", "assets"); // URL { href: 'file:///absolute/path/to/dist/assets/' }
 
 // Get relative path between URLs
-const rel = toRelativePath(
-  new URL('file:///project/src/'),
-  new URL('file:///project/dist/file.js')
-) // '../dist/file.js'
+const rel = toRelativePath(new URL("file:///project/src/"), new URL("file:///project/dist/file.js")); // '../dist/file.js'
 
 // Get parent directory URL
-const parent = toParentURL(new URL('file:///project/src/file.js'))
+const parent = toParentURL(new URL("file:///project/src/file.js"));
 // URL { href: 'file:///project/src/' }
 ```
 

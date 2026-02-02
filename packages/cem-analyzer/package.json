@@ -6,9 +6,7 @@
 	"exports": {
 		"./*": "./dist/*.js"
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
 		"build": "rollup --silent --config",
 		"clean": "rm -rf dist tsconfig.tsbuildinfo",
@@ -27,10 +25,10 @@
 	"dependencies": {
 		"custom-elements-manifest": "^1.0.0",
 		"@github/catalyst": "^1.7.0",
-		"comment-parser": "^1.4.1"
+		"comment-parser": "^1.4.5"
 	},
 	"devDependencies": {
-		"@custom-elements-manifest/analyzer": "^0.10.10",
+		"@custom-elements-manifest/analyzer": "^0.11.0",
 		"@jsxtools/rollup-plugin-utils": "^0.3.0",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"

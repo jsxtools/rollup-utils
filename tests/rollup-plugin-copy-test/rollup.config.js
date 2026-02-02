@@ -1,7 +1,7 @@
 // @ts-check
 
-import { rollupPluginCopy } from "@jsxtools/rollup-plugin-copy"
-import { defineConfig } from "rollup"
+import { rollupPluginCopy } from "@jsxtools/rollup-plugin-copy";
+import { defineConfig } from "rollup";
 
 export default defineConfig({
 	output: {
@@ -20,8 +20,8 @@ export default defineConfig({
 		{
 			name: "report-bundle-files-written",
 			writeBundle(_options, bundle) {
-				console.log("Files written", Object.keys(bundle).length)
+				console.log("Files written", Object.keys(bundle).length);
 			},
 		},
 	],
-})
+});

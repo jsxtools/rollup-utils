@@ -1,11 +1,11 @@
-import { getDirs } from "@jsxtools/rollup-plugin-utils/options"
-import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset"
-import type * as Rollup from "rollup"
-import { CopyAPI, type CopyOptions } from "./copy-api.js"
+import { getDirs } from "@jsxtools/rollup-plugin-utils/options";
+import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset";
+import type * as Rollup from "rollup";
+import { CopyAPI, type CopyOptions } from "./copy-api.js";
 
 export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => {
-	const copy = new CopyAPI()
-	const virtualAsset = new VirtualAsset("rollup-plugin-copy")
+	const copy = new CopyAPI();
+	const virtualAsset = new VirtualAsset("rollup-plugin-copy");
 	const rollup = {
 		/** Whether this is the first run. */
 		firstRun: true,
@@ -18,7 +18,7 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 
 		/** Deferred promise used to optimize async operations. */
 		deferred: Promise.resolve(),
-	}
+	};
 
 	return {
 		name: "rollup-plugin-copy",
@@ -27,26 +27,26 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 				copy.init({
 					...getDirs(options),
 					...pluginOptions,
-				})
+				});
 
-				rollup.deferred = rollup.deferred.then(() => copy.loadCache())
+				rollup.deferred = rollup.deferred.then(() => copy.loadCache());
 			}
 
-			virtualAsset.options(options)
+			virtualAsset.options(options);
 
-			return options
+			return options;
 		},
 		buildStart(): void | Promise<void> {
 			if (rollup.firstRun || rollup.watchRun) {
-				rollup.deferred = rollup.deferred.then(() => copy.updateCache())
+				rollup.deferred = rollup.deferred.then(() => copy.updateCache());
 
-				return rollup.deferred
+				return rollup.deferred;
 			}
 		},
 		resolveId(id): Rollup.ResolveIdResult {
 			// conditionally return virtual module source
 			if (id === virtualAsset.virtualId) {
-				return { id }
+				return { id };
 			}
 		},
 		load(id): Rollup.LoadResult {
@@ -54,30 +54,30 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 			if (id === virtualAsset.virtualId) {
 				return {
 					code: rollup.codeForVirtualId,
-				}
+				};
 			}
 		},
 		generateBundle(options, bundle): void {
-			virtualAsset.generateBundle(options, bundle)
+			virtualAsset.generateBundle(options, bundle);
 
 			if (this.meta.watchMode) {
-				this.addWatchFile(copy.cacheFile)
+				this.addWatchFile(copy.cacheFile);
 			}
 		},
 		writeBundle(): Promise<void> | void {
 			if (rollup.firstRun || rollup.watchRun) {
-				rollup.firstRun = false
-				rollup.watchRun = false
+				rollup.firstRun = false;
+				rollup.watchRun = false;
 
-				rollup.deferred = rollup.deferred.then(() => copy.saveCache())
+				rollup.deferred = rollup.deferred.then(() => copy.saveCache());
 
-				return rollup.deferred
+				return rollup.deferred;
 			}
 		},
 		watchChange(id): void {
 			if (id === copy.cacheFile) {
-				rollup.watchRun = true
+				rollup.watchRun = true;
 			}
 		},
-	}
-}
+	};
+};

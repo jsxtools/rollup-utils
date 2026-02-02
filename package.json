@@ -2,17 +2,14 @@
 	"name": "@jsxtools/pkg.root",
 	"type": "module",
 	"private": true,
-	"workspaces": [
-		"packages/*"
-	],
+	"workspaces": ["packages/*"],
 	"overrides": {
 		"typescript": "$typescript"
 	},
 	"scripts": {
 		"build": "tsc --build --excludeDirectories packages/cem-analyzer && (cd packages/cem-analyzer && rollup --silent --config)",
 		"build:watch": "tsc --watch",
-		"check": "biome check .",
-		"check:fix": "biome check --write .",
+		"check": "biome check --write .",
 		"clean": "git clean -xdf; rm -rf package-lock.json; npm install",
 		"clean:all": "for dir in tests/*/; do (echo 'clean' $dir; cd $dir && npm run clean && npm test); done",
 		"clean:test:all": "for dir in tests/*/; do (echo 'clean & test' $dir; cd $dir && npm run clean && npm test); done",
@@ -20,10 +17,9 @@
 		"clean:test:cem": "cd tests/rollup-plugin-cem-test && npm run clean && npm test",
 		"clean:test:tsc": "cd tests/rollup-plugin-tsc-test && npm run clean && npm test",
 		"clean:test:utils": "cd tests/rollup-plugin-utils-test && npm run clean && npm test",
-		"format": "biome format --write .",
-		"format:check": "biome format .",
-		"lint": "biome lint .",
-		"lint:fix": "biome lint --write .",
+		"format": "dprint fmt",
+		"format:check": "dprint check",
+		"lint": "biome check .",
 		"sync": "node scripts/sync-pkg-versions.js",
 		"test": "npm run typecheck && npm run check:fix && npm run format && npm run test:all",
 		"test:all": "for dir in tests/*/; do (echo 'test' $dir; cd $dir && npm test); done",
@@ -34,8 +30,9 @@
 		"typecheck": "tsc --build --noEmit"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.6",
-		"@types/node": "^24.7.2",
+		"@biomejs/biome": "2.3.13",
+		"@types/node": "24.10.9",
+		"dprint": "0.51.1",
 		"typescript": "^5.4.5"
 	}
 }

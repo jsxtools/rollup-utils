@@ -1,12 +1,12 @@
 // @ts-check
 
-import { globSync, readFileSync } from "node:fs"
-import { resolve } from "node:path"
-import { fileURLToPath } from "node:url"
-import { defineConfig } from "rollup"
+import { globSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "rollup";
 
-const pathToCreate = import.meta.resolve("@custom-elements-manifest/analyzer/src/create.js")
-const pathToSrc = new URL("./", pathToCreate)
+const pathToCreate = import.meta.resolve("@custom-elements-manifest/analyzer/src/create.js");
+const pathToSrc = new URL("./", pathToCreate);
 
 export default defineConfig({
 	input: {
@@ -23,9 +23,9 @@ export default defineConfig({
 	treeshake: false,
 	external(id) {
 		const isExternal =
-			!id.startsWith("/") && !id.startsWith(".") && !id.startsWith("@custom-elements-manifest/analyzer")
+			!id.startsWith("/") && !id.startsWith(".") && !id.startsWith("@custom-elements-manifest/analyzer");
 
-		return isExternal
+		return isExternal;
 	},
 	plugins: [
 		{
@@ -36,9 +36,9 @@ export default defineConfig({
 						type: "asset",
 						fileName: file.replace(".ts", ".d.ts"),
 						source: readFileSync(resolve("src", file), "utf8"),
-					})
+					});
 				}
 			},
 		},
 	],
-})
+});

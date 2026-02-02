@@ -13,23 +13,23 @@ npm install @jsxtools/rollup-plugin-cem
 ## Usage
 
 ```javascript
-import { rollupPluginTsc } from '@jsxtools/rollup-plugin-tsc'
-import { rollupPluginCem } from '@jsxtools/rollup-plugin-cem'
+import { rollupPluginTsc } from "@jsxtools/rollup-plugin-tsc";
+import { rollupPluginCem } from "@jsxtools/rollup-plugin-cem";
 
 export default {
-  input: 'src/index.ts',
-  output: {
-    file: 'dist/bundle.js',
-    format: 'es'
-  },
-  plugins: [
-    rollupPluginTsc(),
-    rollupPluginCem({
-      // optional configuration
-      manifestFile: 'dist/custom-elements.json'
-    })
-  ]
-}
+	input: "src/index.ts",
+	output: {
+		file: "dist/bundle.js",
+		format: "es",
+	},
+	plugins: [
+		rollupPluginTsc(),
+		rollupPluginCem({
+			// optional configuration
+			manifestFile: "dist/custom-elements.json",
+		}),
+	],
+};
 ```
 
 ## Features
@@ -40,6 +40,7 @@ export default {
 - Only regenerates the manifest when source files change.
 
 ## Configuration Options
+
 - `manifestFile` - Output manifest file (default: `${distDir}/custom-elements.json`).
 - `plugins` - Additional CEM analyzer plugins.
 - `include` - Glob patterns for files to include.
@@ -54,20 +55,20 @@ The plugin exports framework-specific plugins:
 
 ```javascript
 import {
-  rollupPluginCem,
-  litPlugin,
-  fastPlugin,
-  stencilPlugin,
-  catalystPlugin,
-  catalystPlugin2
-} from '@jsxtools/rollup-plugin-cem';
+	rollupPluginCem,
+	litPlugin,
+	fastPlugin,
+	stencilPlugin,
+	catalystPlugin,
+	catalystPlugin2,
+} from "@jsxtools/rollup-plugin-cem";
 
 export default {
-  plugins: [
-    rollupPluginCem({
-      plugins: [litPlugin()]
-    })
-  ]
+	plugins: [
+		rollupPluginCem({
+			plugins: [litPlugin()],
+		}),
+	],
 };
 ```
 
@@ -76,7 +77,7 @@ export default {
 The plugin also exports a separate API for programmatic use:
 
 ```javascript
-import { CemAPI } from '@jsxtools/rollup-plugin-cem/api';
+import { CemAPI } from "@jsxtools/rollup-plugin-cem/api";
 ```
 
 ## Peer Dependencies

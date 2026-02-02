@@ -23,7 +23,7 @@ declare module "typescript" {
 		emittedFiles: () => readonly string[],
 		currentDirectory: string,
 		getCanonicalFileName: GetCanonicalFileName,
-		checkSourceFilesBelongToPath?: (commonSourceDirectory: string) => void
+		checkSourceFilesBelongToPath?: (commonSourceDirectory: string) => void,
 	): string;
 
 	export type GetCanonicalFileName = (fileName: string) => string;

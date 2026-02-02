@@ -1,8 +1,8 @@
 // @ts-check
 
-import { rollupPluginCem } from "@jsxtools/rollup-plugin-cem"
-import { rollupPluginTsc } from "@jsxtools/rollup-plugin-tsc"
-import { defineConfig } from "rollup"
+import { rollupPluginCem } from "@jsxtools/rollup-plugin-cem";
+import { rollupPluginTsc } from "@jsxtools/rollup-plugin-tsc";
+import { defineConfig } from "rollup";
 
 export default defineConfig({
 	output: {
@@ -20,8 +20,8 @@ export default defineConfig({
 		{
 			name: "report-bundle-files-written",
 			writeBundle(_options, bundle) {
-				console.log("Files written", Object.keys(bundle).length)
+				console.log("Files written", Object.keys(bundle).length);
 			},
 		},
 	],
-})
+});

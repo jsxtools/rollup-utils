@@ -1,9 +1,9 @@
-import * as array from "@jsxtools/rollup-plugin-utils/array"
-import * as path from "@jsxtools/rollup-plugin-utils/path"
+import * as array from "@jsxtools/rollup-plugin-utils/array";
+import * as path from "@jsxtools/rollup-plugin-utils/path";
 
-import * as ts from "typescript"
+import * as ts from "typescript";
 
-export type SourceFile = ts.SourceFile
+export type SourceFile = ts.SourceFile;
 
 const enum Default {
 	ConfigFile = "tsconfig.json",
@@ -13,76 +13,76 @@ const enum Default {
 
 export class TscAPI {
 	/** Working directory. */
-	workDir = path.toDirPath(Default.WorkDir)
-	rootDir = path.toDirPath(Default.WorkDir, Default.RootDir)
-	distDir = path.toDirPath(Default.WorkDir, Default.RootDir)
-	include = [] as string[]
-	exclude = [] as string[]
-	configFile = path.toPath(Default.WorkDir, Default.ConfigFile)
+	workDir = path.toDirPath(Default.WorkDir);
+	rootDir = path.toDirPath(Default.WorkDir, Default.RootDir);
+	distDir = path.toDirPath(Default.WorkDir, Default.RootDir);
+	include = [] as string[];
+	exclude = [] as string[];
+	configFile = path.toPath(Default.WorkDir, Default.ConfigFile);
 
-	host!: ts.CompilerHost
-	program!: ts.EmitAndSemanticDiagnosticsBuilderProgram
+	host!: ts.CompilerHost;
+	program!: ts.EmitAndSemanticDiagnosticsBuilderProgram;
 
 	config: ts.ParsedCommandLine = {
 		errors: [],
 		fileNames: [],
 		options: {},
-	}
+	};
 
 	result: ts.EmitResult = {
 		emitSkipped: true,
 		diagnostics: [],
 		emittedFiles: [],
-	}
+	};
 
 	/** TypeScript semantic and syntactic diagnostics. */
-	diagnostics: ts.Diagnostic[] = []
+	diagnostics: ts.Diagnostic[] = [];
 
 	/** Custom AST transformers. */
-	customTransformers: ts.CustomTransformers = {}
+	customTransformers: ts.CustomTransformers = {};
 
-	#program!: ts.Program
+	#program!: ts.Program;
 
-	#outputToSource = new Map<string, string>()
+	#outputToSource = new Map<string, string>();
 
-	compiledSource = new Map<string, CompiledSource>()
-	emitableAssets = new Map<string, string>()
-	emitableSource = new Map<string, string>()
+	compiledSource = new Map<string, CompiledSource>();
+	emitableAssets = new Map<string, string>();
+	emitableSource = new Map<string, string>();
 
 	init(options?: TscApiOptions): void {
-		this.workDir = path.toDirPath(options?.workDir ?? Default.WorkDir)
+		this.workDir = path.toDirPath(options?.workDir ?? Default.WorkDir);
 
-		const configFile = this.getConfigFile(options?.configFile ?? Default.ConfigFile)
-		const configData = { ...ts.readConfigFile(configFile, ts.sys.readFile).config }
+		const configFile = this.getConfigFile(options?.configFile ?? Default.ConfigFile);
+		const configData = { ...ts.readConfigFile(configFile, ts.sys.readFile).config };
 
 		if (Array.isArray(options?.include)) {
-			configData.include = array.merge(configData.include, options.include)
+			configData.include = array.merge(configData.include, options.include);
 		}
 
 		if (Array.isArray(options?.exclude)) {
-			configData.exclude = array.merge(configData.exclude, options.exclude)
+			configData.exclude = array.merge(configData.exclude, options.exclude);
 		}
 
 		if (Array.isArray(options?.references)) {
-			configData.references = array.merge(configData.references, options.references)
+			configData.references = array.merge(configData.references, options.references);
 		}
 
 		// update custom transformers
 		this.customTransformers = {};
 
 		if (Array.isArray(options?.customTransformers?.before)) {
-			this.customTransformers.before = [ ...options.customTransformers.before ]
+			this.customTransformers.before = [...options.customTransformers.before];
 		}
 
 		if (Array.isArray(options?.customTransformers?.after)) {
-			this.customTransformers.after = [ ...options.customTransformers.after ]
+			this.customTransformers.after = [...options.customTransformers.after];
 		}
 
 		if (Array.isArray(options?.customTransformers?.afterDeclarations)) {
-			this.customTransformers.afterDeclarations = [ ...options.customTransformers.afterDeclarations ]
+			this.customTransformers.afterDeclarations = [...options.customTransformers.afterDeclarations];
 		}
 
-		this.configFile = configFile
+		this.configFile = configFile;
 
 		this.config = ts.parseJsonConfigFileContent(
 			configData,
@@ -90,60 +90,60 @@ export class TscAPI {
 			ts.getDirectoryPath(configFile),
 			undefined,
 			configFile,
-		)
+		);
 
 		this.rootDir = ts.getCommonSourceDirectory(
 			this.config.options,
 			() => this.config.fileNames,
 			ts.getDirectoryPath(configFile),
 			String,
-		)
+		);
 	}
 
 	getConfigFile(configFile: string): string {
-		return ts.findConfigFile(this.workDir, ts.sys.fileExists, configFile) ?? path.toPath(this.workDir, configFile)
+		return ts.findConfigFile(this.workDir, ts.sys.fileExists, configFile) ?? path.toPath(this.workDir, configFile);
 	}
 
 	writeEmitableAssets(): void {
 		for (const [fileName, source] of this.emitableAssets) {
-			ts.sys.writeFile(fileName, source)
+			ts.sys.writeFile(fileName, source);
 		}
 	}
 
 	emit(): boolean {
-		this.host = ts.createIncrementalCompilerHost(this.config.options)
+		this.host = ts.createIncrementalCompilerHost(this.config.options);
 
 		this.program = ts.createIncrementalProgram({
 			rootNames: this.config.fileNames,
 			options: this.config.options,
 			projectReferences: this.config.projectReferences,
 			host: this.host,
-		})
+		});
 
-		this.#program = this.program.getProgram()
+		this.#program = this.program.getProgram();
 
-		this.distDir = path.toDirPath(this.program.getCompilerOptions().outDir ?? this.workDir ?? this.rootDir)
+		this.distDir = path.toDirPath(this.program.getCompilerOptions().outDir ?? this.workDir ?? this.rootDir);
 
-		this.#outputToSource.clear()
-		this.compiledSource.clear()
-		this.emitableAssets.clear()
-		this.emitableSource.clear()
-		this.diagnostics = []
+		this.#outputToSource.clear();
+		this.compiledSource.clear();
+		this.emitableAssets.clear();
+		this.emitableSource.clear();
+		this.diagnostics = [];
 
 		for (const sourceFileName of this.config.fileNames) {
-			const outputFileNames = ts.getOutputFileNames(this.config, sourceFileName, false)
+			const outputFileNames = ts.getOutputFileNames(this.config, sourceFileName, false);
 
 			for (const outputFileName of outputFileNames) {
-				this.#outputToSource.set(outputFileName, sourceFileName)
+				this.#outputToSource.set(outputFileName, sourceFileName);
 			}
 		}
 
 		const writeFile: ts.WriteFileCallback = (outputFileName, code, _writeBOM, _onError, sourceFiles) => {
 			// tsbuildinfo and other non-source outputs
 			if (!sourceFiles || sourceFiles.length === 0) {
-				this.emitableAssets.set(outputFileName, code)
+				this.emitableAssets.set(outputFileName, code);
 
-				return
+				return;
 			}
 
 			// store declaration source
@@ -151,9 +151,9 @@ export class TscAPI {
 				this.#getCompiledSource(sourceFiles).dts = {
 					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
-				}
+				};
 
-				return
+				return;
 			}
 
 			// store declaration sourcemap
@@ -161,9 +161,9 @@ export class TscAPI {
 				this.#getCompiledSource(sourceFiles).dtsMap = {
 					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
-				}
+				};
 
-				return
+				return;
 			}
 
 			// store javascript source
@@ -171,9 +171,9 @@ export class TscAPI {
 				this.#getCompiledSource(sourceFiles).js = {
 					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
-				}
+				};
 
-				return
+				return;
 			}
 
 			// store javascript sourcemap
@@ -181,87 +181,85 @@ export class TscAPI {
 				this.#getCompiledSource(sourceFiles).jsMap = {
 					name: path.toRelativePath(outputFileName, this.distDir, { explicit: false }),
 					code,
-				}
+				};
 
-				return
+				return;
 			}
 
 			// store non js, d.ts, or map files
-			this.emitableSource.set(this.#getSourceFile(sourceFiles).fileName, code)
-		}
+			this.emitableSource.set(this.#getSourceFile(sourceFiles).fileName, code);
+		};
 
-		this.result = this.program.emit(undefined, writeFile, undefined, undefined, this.customTransformers)
+		this.result = this.program.emit(undefined, writeFile, undefined, undefined, this.customTransformers);
 
 		// combined semantic and syntactic diagnostics
-		this.diagnostics = [...this.program.getSyntacticDiagnostics(), ...this.program.getSemanticDiagnostics()]
+		this.diagnostics = [...this.program.getSyntacticDiagnostics(), ...this.program.getSemanticDiagnostics()];
 
-		return !this.result.emitSkipped
+		return !this.result.emitSkipped;
 	}
 
 	getAbsolutePath(fileName: string, baseDir: string): string {
-		return ts.combinePaths(baseDir, fileName)
+		return ts.combinePaths(baseDir, fileName);
 	}
 
 	getRelativePath(fileName: string, baseDir: string): string {
-		return ts.getRelativePathFromDirectory(baseDir, fileName)
+		return ts.getRelativePathFromDirectory(baseDir, fileName);
 	}
 
 	/** Returns the canonical SourceFile from the pipelined source files. */
 	#getSourceFile(sourceFiles: readonly SourceFile[]): SourceFile {
-		const pipelinedSourceFile = sourceFiles.find((sourceFile) =>
-			this.config.fileNames.includes(sourceFile.fileName),
-		)!
-		const canonicalSourceFile = this.#program.getSourceFile(pipelinedSourceFile.fileName)!
+		const pipelinedSourceFile = sourceFiles.find((sourceFile) => this.config.fileNames.includes(sourceFile.fileName))!;
+		const canonicalSourceFile = this.#program.getSourceFile(pipelinedSourceFile.fileName)!;
 
-		return canonicalSourceFile
+		return canonicalSourceFile;
 	}
 
 	#getCompiledSource(sourceFiles: readonly SourceFile[]): CompiledSource {
-		const sourceFile = this.#getSourceFile(sourceFiles)
+		const sourceFile = this.#getSourceFile(sourceFiles);
 
-		let compiledSource = this.compiledSource.get(sourceFile.fileName)!
+		let compiledSource = this.compiledSource.get(sourceFile.fileName)!;
 
 		if (!compiledSource) {
-			compiledSource = {} as CompiledSource
+			compiledSource = {} as CompiledSource;
 
-			this.compiledSource.set(sourceFile.fileName, compiledSource)
+			this.compiledSource.set(sourceFile.fileName, compiledSource);
 		}
 
-		compiledSource.sourceFile ??= sourceFile
+		compiledSource.sourceFile ??= sourceFile;
 
-		return compiledSource
+		return compiledSource;
 	}
 }
 
 export interface TscApiOptions {
-	workDir?: string
-	configFile?: string
+	workDir?: string;
+	configFile?: string;
 
-	compilerOptions?: ts.CompilerOptions
-	customTransformers?: ts.CustomTransformers
-	exclude?: string[]
-	include?: string[]
-	references?: ts.ProjectReference[]
+	compilerOptions?: ts.CompilerOptions;
+	customTransformers?: ts.CustomTransformers;
+	exclude?: string[];
+	include?: string[];
+	references?: ts.ProjectReference[];
 }
 
 export interface CompiledSource {
 	/** TypeScript declaration source. */
-	dts?: Source
+	dts?: Source;
 
 	/** TypeScript declaration sourcemap. */
-	dtsMap?: Source
+	dtsMap?: Source;
 
 	/** Compiled JavaScript source. */
-	js?: Source
+	js?: Source;
 
 	/** Compiled JavaScript sourcemap. */
-	jsMap?: Source
+	jsMap?: Source;
 
 	/** SourceFile object of the original TypeScript. */
-	sourceFile: SourceFile
+	sourceFile: SourceFile;
 }
 
 export interface Source {
-	name: string
-	code: string
+	name: string;
+	code: string;
 }

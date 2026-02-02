@@ -1,3 +1,3 @@
-import type { Plugin } from "../../../create.js"
+import type { Plugin } from "../../../create.js";
 
-export declare const fastPlugin: () => Plugin[]
+export declare const fastPlugin: () => Plugin[];

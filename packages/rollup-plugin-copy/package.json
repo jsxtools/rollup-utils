@@ -7,9 +7,7 @@
 		".": "./dist/copy-rollup-plugin.js",
 		"./api": "./dist/copy-api.js"
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
 		"build": "tsc",
 		"clean": "rm -rf dist tsconfig.tsbuildinfo",
@@ -29,7 +27,7 @@
 		"@jsxtools/rollup-plugin-utils": "^0.3.0"
 	},
 	"devDependencies": {
-		"@types/node": "^24.9.1",
+		"@types/node": "24.10.9",
 		"rollup": "^4.6.0",
 		"typescript": "^5.4.5"
 	},

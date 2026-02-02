@@ -1,1 +1,1 @@
-export default "ignore"
+export default "ignore";

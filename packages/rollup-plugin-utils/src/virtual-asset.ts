@@ -1,47 +1,47 @@
-import type * as Rollup from "rollup"
-import { assignOptionsInput } from "./options.js"
+import type * as Rollup from "rollup";
+import { assignOptionsInput } from "./options.js";
 
 export class VirtualAsset {
-	#id = ""
+	#id = "";
 
 	constructor(id: string) {
-		this.id = id
+		this.id = id;
 	}
 
 	get id(): string {
-		return this.#id
+		return this.#id;
 	}
 
 	set id(id: string) {
-		id = id.replace(/^\0/, "").replace(/\/$/, "") || "virtual-entry"
+		id = id.replace(/^\0/, "").replace(/\/$/, "") || "virtual-entry";
 
-		this.#id = id
+		this.#id = id;
 	}
 
 	get virtualId() {
-		return `\0${this.id}/`
+		return `\0${this.id}/`;
 	}
 
 	options(options: Rollup.RollupOptions): void {
-		assignOptionsInput(options, this.virtualId)
+		assignOptionsInput(options, this.virtualId);
 	}
 
 	generateBundle(options: Rollup.NormalizedOutputOptions, bundle: Rollup.OutputBundle): void {
 		// with sanitization
-		let bundleId = options.sanitizeFileName(this.virtualId)
+		let bundleId = options.sanitizeFileName(this.virtualId);
 
 		// without a trailing slash
-		bundleId = bundleId.replace(/\/$/, "")
+		bundleId = bundleId.replace(/\/$/, "");
 
 		// without an extension
-		bundleId = bundleId.replace(/\.[^/.]+$/, "")
+		bundleId = bundleId.replace(/\.[^/.]+$/, "");
 
 		// with virtualDirname
-		bundleId = `${options.virtualDirname}/${bundleId}.js`
+		bundleId = `${options.virtualDirname}/${bundleId}.js`;
 
 		// safely delete the bundle id
 		for (const id of [bundleId, `${bundleId}.map`]) {
-			delete bundle[id]
+			delete bundle[id];
 		}
 	}
 }

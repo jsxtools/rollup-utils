@@ -1,12 +1,12 @@
-import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset"
-import type * as Rollup from "rollup"
-import * as ts from "typescript"
-import { type CompiledSource, type Source, TscAPI, type TscApiOptions } from "./tsc-api.js"
+import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset";
+import type * as Rollup from "rollup";
+import * as ts from "typescript";
+import { type CompiledSource, type Source, TscAPI, type TscApiOptions } from "./tsc-api.js";
 
 export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
-	const virtualAsset = new VirtualAsset("rollup-plugin-tsc")
+	const virtualAsset = new VirtualAsset("rollup-plugin-tsc");
 
-	const tsc = new TscAPI()
+	const tsc = new TscAPI();
 
 	const rollup = {
 		/** Whether this is the first run. */
@@ -24,18 +24,18 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 				type: "asset",
 				fileName: source.name,
 				source: source.code,
-			})
+			});
 		},
 
 		/** Returns the code for the virtual entry point. */
 		getSourceForVirtualId(): string {
 			return Array.from(tsc.compiledSource, ([path, compiledSource], index) => {
 				if (compiledSource.js) {
-					return `import * as mod${index} from ${JSON.stringify(path)}`
+					return `import * as mod${index} from ${JSON.stringify(path)}`;
 				}
 
-				return ""
-			}).join(";")
+				return "";
+			}).join(";");
 		},
 
 		/** Return the load result for the compiled source. */
@@ -45,17 +45,17 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 		): Rollup.SourceDescription | null {
 			// emit d.ts file
 			if (compiled.dts) {
-				rollup.emitFileFromSource(context, compiled.dts)
+				rollup.emitFileFromSource(context, compiled.dts);
 			}
 
 			// emit d.ts.map file
 			if (compiled.dtsMap) {
-				rollup.emitFileFromSource(context, compiled.dtsMap)
+				rollup.emitFileFromSource(context, compiled.dtsMap);
 			}
 
 			// emit js.map (if js source is not available)
 			if (compiled.jsMap && !compiled.js) {
-				rollup.emitFileFromSource(context, compiled.jsMap)
+				rollup.emitFileFromSource(context, compiled.jsMap);
 			}
 
 			// return js source (if it is available)
@@ -71,38 +71,37 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 							sourceFile: compiled.sourceFile,
 						},
 					},
-				}
+				};
 			}
 
-			return null
+			return null;
 		},
-	}
+	};
 
 	return {
 		name: "rollup-plugin-tsc",
 		options(options: Rollup.RollupOptions) {
-			virtualAsset.options(options)
+			virtualAsset.options(options);
 		},
 		buildStart(): void {
 			if (rollup.firstRun) {
-				tsc.init(pluginOptions)
+				tsc.init(pluginOptions);
 			}
 
 			if (rollup.firstRun || rollup.watchRun) {
-				tsc.emit()
+				tsc.emit();
 
 				// Surface TypeScript diagnostics as errors
 				for (const diagnostic of tsc.diagnostics) {
-					const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
+					const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
 					const location =
 						diagnostic.file && diagnostic.start
 							? {
 									file: diagnostic.file.fileName,
 									line: diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start).line + 1,
-									column:
-										diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start).character + 1,
+									column: diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start).character + 1,
 								}
-							: undefined
+							: undefined;
 
 					this.error({
 						message,
@@ -110,29 +109,29 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 					});
 				}
 
-				rollup.codeForVirtualId = rollup.getSourceForVirtualId()
+				rollup.codeForVirtualId = rollup.getSourceForVirtualId();
 			}
 
 			if (this.meta.watchMode) {
 				for (const sourceFile of tsc.program.getProgram().getSourceFiles()) {
-					this.addWatchFile(sourceFile.fileName)
+					this.addWatchFile(sourceFile.fileName);
 				}
 			}
 		},
 		resolveId(id, importer): Rollup.ResolveIdResult {
 			// conditionally resolve virtual entry point
 			if (id === virtualAsset.virtualId) {
-				return { id }
+				return { id };
 			}
 
 			// conditionally resolve compiled source
 			if (tsc.compiledSource.get(id)?.js !== undefined || tsc.emitableSource.has(id)) {
-				return { id }
+				return { id };
 			}
 
 			// conditionally resolve external source
 			if (tsc.compiledSource.has(id) || tsc.compiledSource.has(importer as string)) {
-				return { id, external: true }
+				return { id, external: true };
 			}
 		},
 		load(id): Rollup.LoadResult {
@@ -140,39 +139,39 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 			if (id === virtualAsset.virtualId) {
 				return {
 					code: rollup.codeForVirtualId,
-				}
+				};
 			}
 
 			// conditionally return emitable source
 			if (tsc.emitableSource.has(id)) {
 				return {
 					code: `export default ${JSON.stringify(tsc.emitableSource.get(id))}`,
-				}
+				};
 			}
 
 			/** Compiled source for the module id. */
-			const compiled = tsc.compiledSource.get(id)
+			const compiled = tsc.compiledSource.get(id);
 
 			// conditionally return compiled source
 			if (compiled) {
-				return rollup.getResultFromCompiledSource(this, compiled)
+				return rollup.getResultFromCompiledSource(this, compiled);
 			}
 		},
 		generateBundle(options, bundle): void {
-			rollup.firstRun = false
-			rollup.watchRun = false
+			rollup.firstRun = false;
+			rollup.watchRun = false;
 
-			virtualAsset.generateBundle(options, bundle)
+			virtualAsset.generateBundle(options, bundle);
 		},
 		writeBundle(): void {
-			tsc.writeEmitableAssets()
+			tsc.writeEmitableAssets();
 		},
 		watchChange(id, event): void {
 			if (tsc.config.fileNames.includes(id)) {
 				if (event.event === "update") {
-					rollup.watchRun = true
+					rollup.watchRun = true;
 				}
 			}
 		},
-	}
+	};
 }

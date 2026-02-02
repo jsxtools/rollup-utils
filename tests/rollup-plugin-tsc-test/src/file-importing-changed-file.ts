@@ -1,7 +1,7 @@
-import { importedByChangedFile } from "./file-imported-by-changed-file.js"
+import { importedByChangedFile } from "./file-imported-by-changed-file.js";
 
-export const exportedFromChangedFile = importedByChangedFile
+export const exportedFromChangedFile = importedByChangedFile;
 
-const constToChange = 0
+const constToChange = 0;
 
-console.log("const to change (from file importing changed file):", constToChange)
+console.log("const to change (from file importing changed file):", constToChange);

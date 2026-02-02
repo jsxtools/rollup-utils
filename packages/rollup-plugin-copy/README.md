@@ -11,22 +11,22 @@ npm install @jsxtools/rollup-plugin-copy
 ## Usage
 
 ```javascript
-import { rollupPluginCopy } from '@jsxtools/rollup-plugin-copy';
+import { rollupPluginCopy } from "@jsxtools/rollup-plugin-copy";
 
 export default {
-  input: 'src/index.js',
-  output: {
-    file: 'dist/bundle.js',
-    format: 'es'
-  },
-  plugins: [
-    rollupPluginCopy({
-      rootDir: 'src',
-      distDir: 'dist',
-      include: ['src/**/*.css', 'src/**/*.png', 'src/**/*.svg'],
-      exclude: ['src/**/*.test.*']
-    })
-  ]
+	input: "src/index.js",
+	output: {
+		file: "dist/bundle.js",
+		format: "es",
+	},
+	plugins: [
+		rollupPluginCopy({
+			rootDir: "src",
+			distDir: "dist",
+			include: ["src/**/*.css", "src/**/*.png", "src/**/*.svg"],
+			exclude: ["src/**/*.test.*"],
+		}),
+	],
 };
 ```
 
@@ -54,29 +54,21 @@ export default {
 
 ```javascript
 rollupPluginCopy({
-  rootDir: 'src',
-  distDir: 'dist',
-  include: [
-    'src/**/*.css',
-    'src/**/*.png',
-    'src/**/*.jpg',
-    'src/**/*.svg'
-  ]
-})
+	rootDir: "src",
+	distDir: "dist",
+	include: ["src/**/*.css", "src/**/*.png", "src/**/*.jpg", "src/**/*.svg"],
+});
 ```
 
 ### Copy with Exclusions
 
 ```javascript
 rollupPluginCopy({
-  rootDir: 'assets',
-  distDir: 'public',
-  include: ['assets/**/*'],
-  exclude: [
-    'assets/**/*.test.*',
-    'assets/**/.*'
-  ]
-})
+	rootDir: "assets",
+	distDir: "public",
+	include: ["assets/**/*"],
+	exclude: ["assets/**/*.test.*", "assets/**/.*"],
+});
 ```
 
 ## Caching
@@ -97,13 +89,13 @@ The plugin exports both the main plugin and a separate API:
 - `CopyAPI` - Available via `@jsxtools/rollup-plugin-copy/api`
 
 ```javascript
-import { CopyAPI } from '@jsxtools/rollup-plugin-copy/api';
+import { CopyAPI } from "@jsxtools/rollup-plugin-copy/api";
 
 const copyApi = new CopyAPI();
 copyApi.init({
-  rootDir: 'src',
-  distDir: 'dist',
-  include: ['src/**/*.css']
+	rootDir: "src",
+	distDir: "dist",
+	include: ["src/**/*.css"],
 });
 ```
 

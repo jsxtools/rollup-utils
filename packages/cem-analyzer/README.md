@@ -19,15 +19,15 @@ npm install @jsxtools/cem-analyzer
 This package is primarily intended as a dependency for other tools like `@jsxtools/rollup-plugin-cem`. However, it can be used directly:
 
 ```javascript
-import { create } from '@jsxtools/cem-analyzer/create.js';
-import { litPlugin } from '@jsxtools/cem-analyzer/features/framework-plugins/lit/lit.js';
+import { create } from "@jsxtools/cem-analyzer/create.js";
+import { litPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/lit/lit.js";
 
 const manifest = create({
-  modules: sourceFiles, // array of ts.SourceFile objects
-  plugins: [
-    // optional analyzer plugins, like...
-    litPlugin()
-  ]
+	modules: sourceFiles, // array of ts.SourceFile objects
+	plugins: [
+		// optional analyzer plugins, like...
+		litPlugin(),
+	],
 });
 ```
 
