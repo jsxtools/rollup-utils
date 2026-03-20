@@ -84,20 +84,9 @@ export class TscAPI {
 
 		this.configFile = configFile;
 
-		this.config = ts.parseJsonConfigFileContent(
-			configData,
-			ts.sys,
-			ts.getDirectoryPath(configFile),
-			undefined,
-			configFile,
-		);
+		this.config = ts.parseJsonConfigFileContent(configData, ts.sys, ts.getDirectoryPath(configFile), undefined, configFile);
 
-		this.rootDir = ts.getCommonSourceDirectory(
-			this.config.options,
-			() => this.config.fileNames,
-			ts.getDirectoryPath(configFile),
-			String,
-		);
+		this.rootDir = ts.getCommonSourceDirectory(this.config.options, () => this.config.fileNames, ts.getDirectoryPath(configFile), String);
 	}
 
 	getConfigFile(configFile: string): string {

@@ -1,12 +1,12 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**/*.md", "**/*.js", "**/*.json", "**/*.jsonc", "**/*.ts", "!**/*.d.ts"]
+		"includes": ["**/*.js", "**/*.json", "**/*.jsonc", "**/*.ts", "!**/*.d.ts"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -56,5 +56,6 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": []
 }

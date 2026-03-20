@@ -22,8 +22,7 @@ export default defineConfig({
 	context: "globalThis",
 	treeshake: false,
 	external(id) {
-		const isExternal =
-			!id.startsWith("/") && !id.startsWith(".") && !id.startsWith("@custom-elements-manifest/analyzer");
+		const isExternal = !id.startsWith("/") && !id.startsWith(".") && !id.startsWith("@custom-elements-manifest/analyzer");
 
 		return isExternal;
 	},

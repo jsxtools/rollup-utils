@@ -15,8 +15,7 @@ export const assignInput = <T extends InputOption>(input: T, id: string): T => {
 };
 
 /** Assigns an input to Rollup options. */
-export const assignOptionsInput = (options: RollupOptions, id: string): InputOption =>
-	assignInput(normalizeOptionsInput(options), id);
+export const assignOptionsInput = (options: RollupOptions, id: string): InputOption => assignInput(normalizeOptionsInput(options), id);
 
 /** Normalizes Rollup input options. */
 export const normalizeOptionsInput = (options: RollupOptions): InputOption => {

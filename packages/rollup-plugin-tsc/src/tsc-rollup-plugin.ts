@@ -39,10 +39,7 @@ export function rollupPluginTsc(pluginOptions?: TscApiOptions): Rollup.Plugin {
 		},
 
 		/** Return the load result for the compiled source. */
-		getResultFromCompiledSource(
-			context: Rollup.PluginContext,
-			compiled: CompiledSource,
-		): Rollup.SourceDescription | null {
+		getResultFromCompiledSource(context: Rollup.PluginContext, compiled: CompiledSource): Rollup.SourceDescription | null {
 			// emit d.ts file
 			if (compiled.dts) {
 				rollup.emitFileFromSource(context, compiled.dts);

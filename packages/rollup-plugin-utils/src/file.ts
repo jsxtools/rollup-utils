@@ -1,12 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream, type Stats } from "node:fs";
-import {
-	constants as fsConstants,
-	copyFile as fsCopyFile,
-	glob as fsGlob,
-	mkdir as fsMkdir,
-	readFile as fsReadFile,
-} from "node:fs/promises";
+import { constants as fsConstants, copyFile as fsCopyFile, glob as fsGlob, mkdir as fsMkdir, readFile as fsReadFile } from "node:fs/promises";
 import * as array from "./array.js";
 import * as json from "./json.js";
 import * as path from "./path.js";

@@ -1,5 +1,4 @@
-export const to = (value: unknown, replacer?: Replacer, space?: Space): string =>
-	JSON.stringify(value, replacer, space);
+export const to = (value: unknown, replacer?: Replacer, space?: Space): string => JSON.stringify(value, replacer, space);
 
 export const from = <T>(json: string, reviver?: Reviver): T | undefined => {
 	try {

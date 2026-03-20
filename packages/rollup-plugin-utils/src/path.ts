@@ -52,8 +52,7 @@ export const toRelativePath = (path: PathLike, base: PathLike, opts = null as ne
 	return (up ? `..${dir}`.repeat(up) : opts.explicit ? `.${dir}` : "") + tail;
 };
 
-export const toNativePath = (path: PathLike, force = true): string =>
-	fileURLToPath(__toURL(path), { windows: force ? undefined : false });
+export const toNativePath = (path: PathLike, force = true): string => fileURLToPath(__toURL(path), { windows: force ? undefined : false });
 
 // #region Types
 
@@ -71,16 +70,9 @@ export type RelativePathOptions = {
 const __toPath = (url: URL): string => decodeURIComponent(url.pathname);
 
 const __toURL = (path: PathLike) =>
-	path instanceof URL
-		? path
-		: path.startsWith("file:")
-			? new URL(path)
-			: isAbsoluteByOS(path)
-				? pathToFileURL(path)
-				: pathToFileURL(resolve(path));
+	path instanceof URL ? path : path.startsWith("file:") ? new URL(path) : isAbsoluteByOS(path) ? pathToFileURL(path) : pathToFileURL(resolve(path));
 
-const __toDirFromURL = (url: URL) =>
-	url.pathname.endsWith("/") ? url : new URL(`${url.pathname}/${url.search}${url.hash}`, url);
+const __toDirFromURL = (url: URL) => (url.pathname.endsWith("/") ? url : new URL(`${url.pathname}/${url.search}${url.hash}`, url));
 
 const __withPartsFromURL = (url: URL, parts: PathLike[]) => {
 	for (const part of parts) {

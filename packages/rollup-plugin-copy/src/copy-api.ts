@@ -91,9 +91,7 @@ export class CopyAPI {
 				cache.fileNames.push(...fileNames);
 				cache.fileInfos.push(...fileInfos);
 
-				stash.cache = Object.fromEntries(
-					fileNames.map((fileName, index) => [path.toPath(paths.workDir, fileName), fileInfos[index]]),
-				);
+				stash.cache = Object.fromEntries(fileNames.map((fileName, index) => [path.toPath(paths.workDir, fileName), fileInfos[index]]));
 			}
 		}
 	}
@@ -197,11 +195,7 @@ export class CopyAPI {
 
 const isCacheFileName = (fileName: unknown): fileName is string => typeof fileName === "string";
 const isCacheFileInfo = (fileInfo: unknown): fileInfo is FileCache =>
-	Array.isArray(fileInfo) &&
-	fileInfo.length === 3 &&
-	typeof fileInfo[0] === "number" &&
-	typeof fileInfo[1] === "number" &&
-	typeof fileInfo[2] === "string";
+	Array.isArray(fileInfo) && fileInfo.length === 3 && typeof fileInfo[0] === "number" && typeof fileInfo[1] === "number" && typeof fileInfo[2] === "string";
 
 const operate = (operation: FileOperation) => operation();
 

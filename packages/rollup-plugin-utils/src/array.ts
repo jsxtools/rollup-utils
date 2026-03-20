@@ -1,5 +1,4 @@
-export const every = <T>(value: unknown, predicate: Predicate<T>): value is T[] =>
-	isArray(value) && value.every(predicate);
+export const every = <T>(value: unknown, predicate: Predicate<T>): value is T[] => isArray(value) && value.every(predicate);
 
 export const from = <T, R extends T = NonNullable<T>>(items: From<T>, predicate = __isNotNull as Predicate<R>): R[] =>
 	(items == null ? [] : isArray(items) ? items : [items]).filter(predicate);

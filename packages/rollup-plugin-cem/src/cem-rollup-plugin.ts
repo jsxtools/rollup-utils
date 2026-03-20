@@ -39,10 +39,9 @@ export const rollupPluginCem = (pluginOptions?: CemOptions): Plugin => {
 	};
 };
 
-export type { CemOptions };
-
 export { catalystPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/catalyst/catalyst";
 export { catalystPlugin2 } from "@jsxtools/cem-analyzer/features/framework-plugins/catalyst-major-2/catalyst";
 export { fastPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/fast/fast";
 export { litPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/lit/lit";
 export { stencilPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/stencil/stencil";
+export type { CemOptions };

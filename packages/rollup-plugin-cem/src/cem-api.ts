@@ -169,9 +169,7 @@ export const getNormalizedOptions = (init?: CemOptions): CemNormalizedOptions =>
 		workDir,
 		distDir,
 		rootDir: path.toDirPath(workDir, init?.rootDir || Default.RootDir),
-		manifestFile: init?.manifestFile
-			? path.toPath(workDir, init.manifestFile)
-			: path.toPath(distDir, Default.ManifestFile),
+		manifestFile: init?.manifestFile ? path.toPath(workDir, init.manifestFile) : path.toPath(distDir, Default.ManifestFile),
 		include: array.from(init?.include ?? "**", str.hasTrimmedValue).map(str.trim),
 		exclude: array.from(init?.exclude).map(str.trim),
 		modules: array.from(init?.modules),

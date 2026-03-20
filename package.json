@@ -2,7 +2,9 @@
 	"name": "@jsxtools/pkg.root",
 	"type": "module",
 	"private": true,
-	"workspaces": ["packages/*"],
+	"workspaces": [
+		"packages/*"
+	],
 	"overrides": {
 		"typescript": "$typescript"
 	},
@@ -16,6 +18,7 @@
 		"clean:test:copy": "cd tests/rollup-plugin-copy-test && npm run clean && npm test",
 		"clean:test:cem": "cd tests/rollup-plugin-cem-test && npm run clean && npm test",
 		"clean:test:tsc": "cd tests/rollup-plugin-tsc-test && npm run clean && npm test",
+		"clean:test:tsc-resolve": "cd tests/rollup-plugin-tsc-resolve-test && npm run clean && npm test",
 		"clean:test:utils": "cd tests/rollup-plugin-utils-test && npm run clean && npm test",
 		"format": "dprint fmt",
 		"format:check": "dprint check",
@@ -26,13 +29,43 @@
 		"test:copy": "cd tests/rollup-plugin-copy-test && npm test",
 		"test:cem": "cd tests/rollup-plugin-cem-test && npm test",
 		"test:tsc": "cd tests/rollup-plugin-tsc-test && npm test",
+		"test:tsc-resolve": "cd tests/rollup-plugin-tsc-resolve-test && npm test",
 		"test:utils": "cd tests/rollup-plugin-utils-test && npm test",
 		"typecheck": "tsc --build --noEmit"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.13",
-		"@types/node": "24.10.9",
-		"dprint": "0.51.1",
+		"@biomejs/biome": "2.4.8",
+		"@types/node": "24.12.0",
+		"dprint": "0.53.0",
+		"rollup": "^4.59.0",
 		"typescript": "^5.4.5"
+	},
+	"knip": {
+		"workspaces": {
+			"packages/cem-analyzer": {
+				"ignoreDependencies": [
+					"@github/catalyst",
+					"comment-parser",
+					"custom-elements-manifest"
+				]
+			},
+			"tests/rollup-plugin-cem-test": {
+				"entry": [
+					"src/**/*.ts"
+				]
+			},
+			"tests/rollup-plugin-copy-test": {
+				"ignoreFiles": [
+					"src/**/*.ts"
+				]
+			},
+			"tests/rollup-plugin-tsc-resolve-test": {},
+			"tests/rollup-plugin-tsc-test": {
+				"entry": [
+					"src/**/*.ts"
+				]
+			},
+			"tests/rollup-plugin-utils-test": {}
+		}
 	}
 }

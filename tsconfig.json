@@ -26,9 +26,6 @@
 	"exclude": ["./packages/cem-analyzer"],
 	"references": [
 		{
-			"path": "./packages/file-system"
-		},
-		{
 			"path": "./packages/rollup-plugin-cem"
 		},
 		{
@@ -36,6 +33,9 @@
 		},
 		{
 			"path": "./packages/rollup-plugin-tsc"
+		},
+		{
+			"path": "./packages/rollup-plugin-tsc-resolve"
 		},
 		{
 			"path": "./packages/rollup-plugin-utils"

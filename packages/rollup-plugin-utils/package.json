@@ -13,7 +13,9 @@
 		"./string": "./dist/string.js",
 		"./virtual-asset": "./dist/virtual-asset.js"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsc",
 		"clean": "rm -rf dist tsconfig.tsbuildinfo",
@@ -31,10 +33,10 @@
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-utils",
 	"devDependencies": {
 		"@types/node": "24.10.9",
-		"rollup": "^4.6.0",
+		"rollup": "^4.59.0",
 		"typescript": "^5.4.5"
 	},
 	"peerDependencies": {
-		"rollup": "^4.6.0"
+		"rollup": "^4.59.0"
 	}
 }

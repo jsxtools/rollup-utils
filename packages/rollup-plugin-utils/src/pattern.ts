@@ -14,18 +14,7 @@ export class Pattern {
 		for (let scanIndex = 0, n = pattern.length; scanIndex < n; ++scanIndex) {
 			const ch = pattern[scanIndex];
 
-			if (
-				ch === "\\" ||
-				ch === "[" ||
-				ch === "]" ||
-				ch === "?" ||
-				ch === "*" ||
-				ch === "@" ||
-				ch === "!" ||
-				ch === "+" ||
-				ch === "(" ||
-				ch === ")"
-			) {
+			if (ch === "\\" || ch === "[" || ch === "]" || ch === "?" || ch === "*" || ch === "@" || ch === "!" || ch === "+" || ch === "(" || ch === ")") {
 				hasMeta = true;
 				break;
 			}
@@ -140,8 +129,7 @@ const matchWithGlobStarDP = (segments: Segment[], parts: string[], includeDot: b
 			} else {
 				if (j < n) {
 					const part = parts[j];
-					result =
-						!isDotfile(part, includeDot, segment.explicitLeadingDot) && segment.re!.test(part) && recur(i + 1, j + 1);
+					result = !isDotfile(part, includeDot, segment.explicitLeadingDot) && segment.re!.test(part) && recur(i + 1, j + 1);
 				}
 			}
 		}
