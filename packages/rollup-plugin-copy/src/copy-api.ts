@@ -110,8 +110,18 @@ export class CopyAPI {
 			const cachingPath = path.toRelativePath(stashedPath, paths.workDir);
 
 			if (!globbedFiles.includes(stashedPath)) {
+				const relativePath = path.toRelativePath(stashedPath, paths.rootDir);
+				const targetedPath = path.toPath(paths.distDir, relativePath);
+
 				stash.shouldUpdate = true;
-				operations.files.push(async () => await fs.deleteFile(stashedPath));
+				operations.files.push(
+					async () =>
+						await fs.deleteFile(targetedPath).catch((error: NodeJS.ErrnoException) => {
+							if (error?.code !== "ENOENT") {
+								throw error;
+							}
+						}),
+				);
 			} else {
 				operations.cache.push(async () => {
 					const stat = await fs.getFileStats(stashedPath);

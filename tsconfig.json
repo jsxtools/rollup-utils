@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"composite": true,
 		"declaration": true,
-		"esModuleInterop": false,
 		"incremental": true,
 		"lib": [
 			"ES2024",

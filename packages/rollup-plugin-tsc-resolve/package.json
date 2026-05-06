@@ -26,7 +26,7 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-tsc-resolve",
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.3.0",
+		"@jsxtools/rollup-plugin-utils": "^0.4.0",
 		"@types/node": "24.10.9",
 		"rollup": "^4.59.0",
 		"typescript": "^5.4.5"

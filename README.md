@@ -76,7 +76,7 @@ npm run format
 npm run lint
 
 # Check and fix all issues
-npm run check:fix
+npm run check
 ```
 
 ## License

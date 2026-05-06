@@ -3,7 +3,8 @@
 	"type": "module",
 	"private": true,
 	"workspaces": [
-		"packages/*"
+		"packages/*",
+		"tests/*"
 	],
 	"overrides": {
 		"typescript": "$typescript"
@@ -24,7 +25,7 @@
 		"format:check": "dprint check",
 		"lint": "biome check .",
 		"sync": "node scripts/sync-pkg-versions.js",
-		"test": "npm run typecheck && npm run check:fix && npm run format && npm run test:all",
+		"test": "npm run typecheck && npm run check && npm run format && npm run test:all",
 		"test:all": "for dir in tests/*/; do (echo 'test' $dir; cd $dir && npm test); done",
 		"test:copy": "cd tests/rollup-plugin-copy-test && npm test",
 		"test:cem": "cd tests/rollup-plugin-cem-test && npm test",

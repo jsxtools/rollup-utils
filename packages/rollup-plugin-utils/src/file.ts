@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { createHash } from "node:crypto";
 import { createReadStream, type Stats } from "node:fs";
 import { constants as fsConstants, copyFile as fsCopyFile, glob as fsGlob, mkdir as fsMkdir, readFile as fsReadFile } from "node:fs/promises";
