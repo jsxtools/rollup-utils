@@ -8,6 +8,6 @@
 		"test:coverage": "node --test --experimental-test-coverage"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.4.0"
+		"@jsxtools/rollup-plugin-utils": "^0.5.0"
 	}
 }

@@ -39,7 +39,7 @@
 		"@types/node": "24.12.0",
 		"dprint": "0.53.0",
 		"rollup": "^4.59.0",
-		"typescript": "^5.4.5"
+		"typescript": "^6.0.3"
 	},
 	"knip": {
 		"workspaces": {
