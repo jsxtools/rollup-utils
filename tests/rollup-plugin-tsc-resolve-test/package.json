@@ -1,14 +1,21 @@
 {
 	"name": "@jsxtools/rollup-plugin-tsc-resolve.test",
+	"version": "0.0.0",
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"clean": "rm -rf dist",
-		"test": "rollup --config"
+		"clean": "rm -rf dist tsconfig.tsbuildinfo",
+		"clean:test": "npm run clean:test:rolldown && npm run clean:test:rollup",
+		"clean:test:rolldown": "npm run clean && npm run test:rolldown",
+		"clean:test:rollup": "npm run clean && npm run test:rollup",
+		"test": "npm run test:rollup && npm run test:rolldown",
+		"test:rollup": "rollup --config",
+		"test:rolldown": "rolldown --config rolldown.config.js"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-tsc": "^0.5.0",
-		"@jsxtools/rollup-plugin-tsc-resolve": "^0.2.0",
+		"@jsxtools/rollup-plugin-tsc": "^0.6.0",
+		"@jsxtools/rollup-plugin-tsc-resolve": "^0.2.1",
+		"rolldown": "^1.1.4",
 		"rollup": "^4.59.0"
 	}
 }

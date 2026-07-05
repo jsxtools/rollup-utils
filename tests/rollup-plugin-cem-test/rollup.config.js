@@ -18,6 +18,20 @@ export default defineConfig({
 		rollupPluginTsc(),
 		rollupPluginCem(),
 		{
+			name: "assert-tsc-metadata",
+			generateBundle() {
+				const hasTypeScriptContext = [...this.getModuleIds()].some((id) => {
+					const tsc = this.getModuleInfo(id)?.meta?.tsc;
+
+					return tsc?.program && tsc.sourceFile && tsc.typeChecker;
+				});
+
+				if (!hasTypeScriptContext) {
+					this.error("Missing TypeScript metadata.");
+				}
+			},
+		},
+		{
 			name: "report-bundle-files-written",
 			writeBundle(_options, bundle) {
 				console.log("Files written", Object.keys(bundle).length);

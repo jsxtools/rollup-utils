@@ -1,43 +1,56 @@
+import type { TS } from "@jsxtools/cem-analyzer/types";
 import { getDirs } from "@jsxtools/rollup-plugin-utils/options";
 import type { Plugin, RollupOptions } from "rollup";
 import { CemAPI, type CemOptions } from "./cem-api.js";
 
-export const rollupPluginCem = (pluginOptions?: CemOptions): Plugin => {
+export const rollupPluginCem = (pluginOptions?: CemOptions): CompatiblePlugin => {
 	const api = new CemAPI();
 
-	let firstRun = false;
+	let initialized = false;
 
-	return {
+	const plugin = {
 		name: "rollup-plugin-cem",
 		options(options: RollupOptions): RollupOptions {
-			if (!firstRun) {
+			if (!initialized) {
 				api.init({
 					...getDirs(options),
 					...pluginOptions,
 				});
+
+				initialized = true;
 			}
 
 			return options;
 		},
-		transform: {
-			order: "post",
-			handler(_code, id): null {
-				const sourceFile = this.getModuleInfo(id)?.meta?.tsc?.sourceFile;
+		generateBundle(): void {
+			api.clearModules();
+
+			for (const id of this.getModuleIds()) {
+				const tscMeta = this.getModuleInfo(id)?.meta?.tsc as TscModuleMeta | undefined;
+				const sourceFile = tscMeta?.sourceFile;
 
 				if (sourceFile) {
-					api.modules.add(sourceFile);
+					api.addModule(sourceFile);
 				}
-
-				return null;
-			},
+			}
 		},
-		writeBundle(): void {
-			firstRun = false;
-
-			api.updateManifest();
+		async writeBundle(): Promise<void> {
+			await api.updateManifest();
 		},
-	};
+	} satisfies Plugin;
+
+	return plugin;
 };
+
+interface CompatiblePlugin {
+	name: string;
+}
+
+interface TscModuleMeta {
+	program?: TS.Program;
+	sourceFile?: TS.SourceFile;
+	typeChecker?: TS.TypeChecker;
+}
 
 export { catalystPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/catalyst/catalyst";
 export { catalystPlugin2 } from "@jsxtools/cem-analyzer/features/framework-plugins/catalyst-major-2/catalyst";

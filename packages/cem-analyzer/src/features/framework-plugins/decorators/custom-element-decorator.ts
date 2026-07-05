@@ -1,6 +1,6 @@
-import type { AnalyzePhaseParams } from "../../../create.js";
+import type { AnalyzePhaseParams, Plugin } from "../../../types.js";
 
-export declare function customElementDecoratorPlugin(): {
-	name: string;
+/** Decorator plugin for custom elements. */
+export declare function customElementDecoratorPlugin(): Plugin & {
 	analyzePhase(params: AnalyzePhaseParams): void;
 };

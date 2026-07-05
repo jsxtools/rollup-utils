@@ -1,46 +1,68 @@
 # @jsxtools/cem-analyzer
 
-**@jsxtools/cem-analyzer** is a forked release of [@custom-elements-manifest/analyzer](https://www.npmjs.com/package/@custom-elements-manifest/analyzer) that includes a typed `create` API, with support for a larger range of TypeScript versions.
+> Typed Custom Elements Manifest analysis primitives.
 
-## Features
+`@jsxtools/cem-analyzer` provides typed access to the Custom Elements Manifest analyzer used by `@jsxtools/rollup-plugin-cem`: the `create` API, analyzer plugins, creator helpers, utilities, and shared types.
 
-- Support for TypeScript versions 5.4.5 and above.
-- TypeScript support for `/create.js` and `/features/framework-plugins/*.js`.
-- TypeScript support for Custom Elements Manifest schema types.
+Use this package directly when you already have TypeScript `SourceFile` objects. Most Rollup users should use `@jsxtools/rollup-plugin-cem`, which wires this up automatically.
 
-## Installation
+## Install
 
 ```shell
 npm install @jsxtools/cem-analyzer
 ```
 
-## Usage
-
-This package is primarily intended as a dependency for other tools like `@jsxtools/rollup-plugin-cem`. However, it can be used directly:
+## Quick start
 
 ```javascript
-import { create } from "@jsxtools/cem-analyzer/create.js";
-import { litPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/lit/lit.js";
+import { create } from "@jsxtools/cem-analyzer/create";
+import { litPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/lit/lit";
 
 const manifest = create({
-	modules: sourceFiles, // array of ts.SourceFile objects
-	plugins: [
-		// optional analyzer plugins, like...
-		litPlugin(),
-	],
+	modules: sourceFiles,
+	plugins: [litPlugin()],
 });
 ```
 
-## Available Exports
+`modules` must be TypeScript `SourceFile` objects.
 
-- `create.js` - Core analyzer function and types
-- `features/framework-plugins/` - Framework-specific plugins:
-  - `lit/lit.js` - Lit framework support
-  - `fast/fast.js` - FAST framework support
-  - `stencil/stencil.js` - Stencil framework support
-  - `catalyst/catalyst.js` - GitHub Catalyst support
-  - `catalyst-major-2/catalyst.js` - Catalyst v2 support
+## Types
+
+Type imports use the same subpaths as runtime imports.
+
+```typescript
+import { create } from "@jsxtools/cem-analyzer/create";
+import type { CreateOptions } from "@jsxtools/cem-analyzer/create";
+import type { Plugin } from "@jsxtools/cem-analyzer/types";
+```
+
+```typescript
+import type { AnalyzePhaseParams, CEM, Context, TS } from "@jsxtools/cem-analyzer/types";
+```
+
+## Exports
+
+| Export                                                                        | Description                                                     |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `@jsxtools/cem-analyzer/create`                                               | Typed `create` API and options.                                 |
+| `@jsxtools/cem-analyzer/types`                                                | Shared CEM, TypeScript, plugin, context, and phase types.       |
+| `@jsxtools/cem-analyzer/features`                                             | Built-in analyzer plugin pipeline.                              |
+| `@jsxtools/cem-analyzer/features/analyse-phase/*`                             | Typed analyzer phase plugins and creator helpers.               |
+| `@jsxtools/cem-analyzer/features/collect-phase/*`                             | Typed collect-phase plugins.                                    |
+| `@jsxtools/cem-analyzer/features/link-phase/*`                                | Typed module-link-phase plugins.                                |
+| `@jsxtools/cem-analyzer/features/post-processing/*`                           | Typed package post-processing plugins.                          |
+| `@jsxtools/cem-analyzer/features/framework-plugins/lit/lit`                   | Lit analyzer plugin.                                            |
+| `@jsxtools/cem-analyzer/features/framework-plugins/fast/fast`                 | FAST analyzer plugin.                                           |
+| `@jsxtools/cem-analyzer/features/framework-plugins/stencil/stencil`           | Stencil analyzer plugin.                                        |
+| `@jsxtools/cem-analyzer/features/framework-plugins/catalyst/catalyst`         | GitHub Catalyst analyzer plugin.                                |
+| `@jsxtools/cem-analyzer/features/framework-plugins/catalyst-major-2/catalyst` | GitHub Catalyst v2 analyzer plugin.                             |
+| `@jsxtools/cem-analyzer/utils`                                                | Shared analyzer utility helpers.                                |
+| `@jsxtools/cem-analyzer/utils/*`                                              | Typed AST, import/export, JSDoc, manifest, and mixin utilities. |
+
+## Peer dependencies
+
+- `typescript` `^5.4.5 || ^6.0.0`.
 
 ## License
 
-MIT-0
+[MIT-0](../../LICENSE.md)

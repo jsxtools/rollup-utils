@@ -4,7 +4,7 @@
 		"resolveJsonModule": true,
 		"outDir": "dist",
 		"rootDir": "src",
-		"tsBuildInfoFile": "tsconfig.tsbuildinfo"
+		"tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
 	},
 	"include": ["src/*.json", "src/*.ts"]
 }

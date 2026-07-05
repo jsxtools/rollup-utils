@@ -2,12 +2,21 @@
 
 import { createHash } from "node:crypto";
 import { createReadStream, type Stats } from "node:fs";
-import { constants as fsConstants, copyFile as fsCopyFile, glob as fsGlob, mkdir as fsMkdir, readFile as fsReadFile } from "node:fs/promises";
+import {
+	constants as fsConstants,
+	copyFile as fsCopyFile,
+	glob as fsGlob,
+	mkdir as fsMkdir,
+	readFile as fsReadFile,
+	stat as getFileStats,
+} from "node:fs/promises";
 import * as array from "./array.js";
 import * as json from "./json.js";
 import * as path from "./path.js";
 
-export { readFile, stat as getFileStats, unlink as deleteFile, writeFile } from "node:fs/promises";
+export { readFile, unlink as deleteFile, writeFile } from "node:fs/promises";
+
+export { getFileStats };
 
 /** Copies a file using the fastest method available. */
 export const copyFile = async (src: PathLike, dest: PathLike): Promise<void> => {
@@ -46,6 +55,17 @@ export const hash = async (file: PathLike): Promise<string> => {
 		stream.on("end", () => resolve(hash.digest("hex")));
 		stream.on("error", reject);
 	});
+};
+
+/** Returns whether a file exists. */
+export const exists = async (file: PathLike): Promise<boolean> => {
+	try {
+		await getFileStats(file);
+
+		return true;
+	} catch {
+		return false;
+	}
 };
 
 /** Creates a directory recursively. */

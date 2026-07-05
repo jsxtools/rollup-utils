@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-tsc-resolve",
-	"description": "A Rollup plugin for resolving TypeScript module paths using the TypeScript Compiler API.",
-	"version": "0.2.0",
+	"description": "A Rollup, Rolldown, and Vite-compatible plugin for resolving TypeScript module paths using the TypeScript Compiler API.",
+	"version": "0.2.1",
 	"type": "module",
 	"exports": {
 		".": "./dist/tsc-resolve-rollup-plugin.js",
@@ -9,6 +9,18 @@
 	},
 	"files": [
 		"dist"
+	],
+	"keywords": [
+		"rollup",
+		"rollup-plugin",
+		"rolldown",
+		"rolldown-plugin",
+		"vite",
+		"vite-plugin",
+		"typescript",
+		"tsconfig",
+		"paths",
+		"module-resolution"
 	],
 	"scripts": {
 		"build": "tsc",
@@ -25,8 +37,10 @@
 		"directory": "packages/rollup-plugin-tsc-resolve"
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-tsc-resolve",
+	"dependencies": {
+		"@jsxtools/rollup-plugin-utils": "^0.6.0"
+	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.5.0",
 		"@types/node": "24.10.9",
 		"rollup": "^4.59.0",
 		"typescript": "^6.0.3"
@@ -34,5 +48,10 @@
 	"peerDependencies": {
 		"rollup": "^4.59.0",
 		"typescript": "^5.4.5 || ^6.0.0"
+	},
+	"peerDependenciesMeta": {
+		"rollup": {
+			"optional": true
+		}
 	}
 }

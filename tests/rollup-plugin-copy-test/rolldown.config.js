@@ -1,0 +1,28 @@
+// @ts-check
+
+import { rollupPluginCopy } from "@jsxtools/rollup-plugin-copy";
+import { defineConfig } from "rolldown";
+
+export default defineConfig({
+	input: "src/ignore.ts",
+	output: {
+		dir: "dist",
+		format: "es",
+		preserveModules: true,
+		preserveModulesRoot: "src",
+		sourcemap: true,
+	},
+	context: "globalThis",
+	treeshake: false,
+	plugins: [
+		rollupPluginCopy({
+			include: ["src/*.css"],
+		}),
+		{
+			name: "report-bundle-files-written",
+			writeBundle(_options, bundle) {
+				console.log("Files written", Object.keys(bundle).length);
+			},
+		},
+	],
+});

@@ -1,3 +1,4 @@
-import type { Plugin } from "../../../create.js";
+import type { Plugin } from "../../../types.js";
 
-export declare const litPlugin: () => Plugin[];
+/** Framework plugin set for Lit components. */
+export declare function litPlugin(): Plugin[];

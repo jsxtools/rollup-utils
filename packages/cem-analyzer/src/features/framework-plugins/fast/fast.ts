@@ -1,3 +1,4 @@
-import type { Plugin } from "../../../create.js";
+import type { Plugin } from "../../../types.js";
 
-export declare const fastPlugin: () => Plugin[];
+/** Framework plugin set for FAST components. */
+export declare function fastPlugin(): Plugin[];

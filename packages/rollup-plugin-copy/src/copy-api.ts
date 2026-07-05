@@ -12,194 +12,204 @@ const enum Default {
 }
 
 export class CopyAPI {
-	#internals = {
-		cache: {
-			fileNames: [],
-			fileInfos: [],
-			version: "0.2.0",
-		} as Cache,
-		files: {
-			globbed: [] as string[],
-			stashed: [] as string[],
-		},
-		glob: {
-			include: ["**/*"],
-			exclude: ["node_modules"],
-		} as fs.GlobOptions,
-		operations: {
-			dists: [] as FileOperation[],
-			cache: [] as FileOperation[],
-			files: [] as FileOperation[],
-		},
-		paths: {
-			workDir: path.toDirURL(Default.WorkDir),
-			rootDir: path.toDirURL(Default.WorkDir, Default.RootDir),
-			distDir: path.toDirURL(Default.WorkDir, Default.DistDir),
-			cacheFile: path.toURL(Default.WorkDir, Default.CacheFile),
-		},
-		stash: {
-			cache: {} as Record<string, FileCache>,
-			files: new Map<string, FileCache>(),
-			fileNames: [] as string[],
-			shouldUpdate: false,
-		},
+	#cache: Cache = createCache();
+	#cachedInfoBySourceFileName = new Map<string, FileCache>();
+	#cacheFile = path.toURL(Default.WorkDir, Default.CacheFile);
+	#distDir = path.toDirURL(Default.WorkDir, Default.DistDir);
+	#pendingFileOperations: FileOperation[] = [];
+	#glob: fs.GlobOptions = {
+		include: ["**/*"],
+		exclude: ["node_modules"],
 	};
+	#nextCacheByRelativeSourceFileName = new Map<string, FileCache>();
+	#rootDir = path.toDirURL(Default.WorkDir, Default.RootDir);
+	#cacheChanged = false;
+	#sourceFileNames: string[] = [];
+	#sourceFileNameSet = new Set<string>();
+	#targetFileNameSet = new Set<string>();
+	#workDir = path.toDirURL(Default.WorkDir);
 
 	get cacheFile(): string {
-		return this.#internals.paths.cacheFile.pathname;
+		return this.#cacheFile.pathname;
 	}
 
 	files(): AsyncGenerator<string, void, void> {
-		const { glob, paths } = this.#internals;
-
 		return fs.glob({
-			cwd: paths.workDir,
-			include: glob.include,
-			exclude: glob.exclude,
+			cwd: this.#workDir,
+			include: this.#glob.include,
+			exclude: this.#glob.exclude,
 		});
 	}
 
-	init(options = null as never as CopyOptions): void {
-		const { paths, glob } = this.#internals;
+	init(options?: CopyOptions): void {
+		const include = array.from(options?.include, str.hasTrimmedValue);
+		const exclude = array.from(options?.exclude, str.hasTrimmedValue);
 
-		paths.workDir = path.toDirURL(options?.workDir ?? Default.WorkDir);
-		paths.rootDir = path.toDirURL(paths.workDir, options?.rootDir ?? Default.RootDir);
-		paths.distDir = path.toDirURL(paths.workDir, options?.distDir ?? Default.DistDir);
-		paths.cacheFile = path.toURL(paths.workDir, options?.cacheFile ?? Default.CacheFile);
+		this.#workDir = path.toDirURL(options?.workDir ?? Default.WorkDir);
+		this.#rootDir = path.toDirURL(this.#workDir, options?.rootDir ?? Default.RootDir);
+		this.#distDir = path.toDirURL(this.#workDir, options?.distDir ?? Default.DistDir);
+		this.#cacheFile = path.toURL(this.#workDir, options?.cacheFile ?? Default.CacheFile);
+		this.#glob = {
+			include: include.length ? include : ["**/*"],
+			exclude: exclude.length ? exclude : ["node_modules"],
+		};
+	}
 
-		Object.assign(glob, {
-			include: array.from(options?.include, str.hasTrimmedValue),
-			exclude: array.from(options?.exclude, str.hasTrimmedValue),
-		});
+	get sourceFiles(): readonly string[] {
+		return this.#sourceFileNames;
+	}
+
+	hasSourceFile(fileName: string): boolean {
+		return this.#sourceFileNameSet.has(fileName);
 	}
 
 	async loadCache(): Promise<void> {
-		const { cache, paths, stash } = this.#internals;
-		const filed = await fs.readJSON<Cache>(paths.cacheFile).catch(() => undefined);
+		const storedCache = await fs.readJSON<Cache>(this.#cacheFile).catch(() => undefined);
 
-		cache.fileNames = [];
-		cache.fileInfos = [];
+		this.#cache = createCache();
+		this.#cachedInfoBySourceFileName.clear();
+		this.#cacheChanged = false;
 
-		stash.cache = {};
-		stash.shouldUpdate = false;
-
-		if (filed?.version === cache.version) {
-			const fileNames = array.every(filed.fileNames, isCacheFileName) ? filed.fileNames : [];
-			const fileInfos = array.every(filed.fileInfos, isCacheFileInfo) ? filed.fileInfos : [];
+		if (storedCache?.version === this.#cache.version) {
+			const fileNames = array.every(storedCache.fileNames, isCacheFileName) ? storedCache.fileNames : [];
+			const fileInfos = array.every(storedCache.fileInfos, isCacheFileInfo) ? storedCache.fileInfos : [];
 
 			if (fileNames.length === fileInfos.length) {
-				cache.fileNames.push(...fileNames);
-				cache.fileInfos.push(...fileInfos);
+				this.#cache.fileNames.push(...fileNames);
+				this.#cache.fileInfos.push(...fileInfos);
 
-				stash.cache = Object.fromEntries(fileNames.map((fileName, index) => [path.toPath(paths.workDir, fileName), fileInfos[index]]));
+				for (let index = 0; index < fileNames.length; ++index) {
+					this.#cachedInfoBySourceFileName.set(path.toPath(this.#workDir, fileNames[index]), fileInfos[index]);
+				}
 			}
 		}
 	}
 
 	async updateCache(): Promise<void> {
-		const { operations, paths, stash } = this.#internals;
 		const globbedFiles = await Array.fromAsync(this.files());
+		const globbedFileSet = new Set(globbedFiles);
+		const cacheOperations: FileOperation[] = [];
 
-		operations.cache = [];
-		operations.files = [];
+		this.#pendingFileOperations = [];
+		this.#nextCacheByRelativeSourceFileName.clear();
+		this.#cacheChanged = false;
+		this.#sourceFileNames = globbedFiles;
+		this.#sourceFileNameSet = globbedFileSet;
+		this.#targetFileNameSet.clear();
 
-		stash.files.clear();
-		stash.shouldUpdate = false;
+		for (const [sourceFileName, cachedInfo] of this.#cachedInfoBySourceFileName) {
+			const relativeSourceFileName = path.toRelativePath(sourceFileName, this.#workDir);
+			const targetFileName = this.#targetFileName(sourceFileName);
 
-		for (const [stashedPath, stashedInfo] of Object.entries(stash.cache)) {
-			const cachingPath = path.toRelativePath(stashedPath, paths.workDir);
-
-			if (!globbedFiles.includes(stashedPath)) {
-				const relativePath = path.toRelativePath(stashedPath, paths.rootDir);
-				const targetedPath = path.toPath(paths.distDir, relativePath);
-
-				stash.shouldUpdate = true;
-				operations.files.push(
-					async () =>
-						await fs.deleteFile(targetedPath).catch((error: NodeJS.ErrnoException) => {
-							if (error?.code !== "ENOENT") {
-								throw error;
-							}
-						}),
-				);
-			} else {
-				operations.cache.push(async () => {
-					const stat = await fs.getFileStats(stashedPath);
-
-					if (stat.mtimeMs === stashedInfo[0] && stat.size === stashedInfo[1]) {
-						stash.files.set(cachingPath, stashedInfo);
-						stash.fileNames.push(stashedPath);
-					} else {
-						const hash = await fs.hash(stashedPath);
-
-						stashedInfo[0] = stat.mtimeMs;
-						stashedInfo[1] = stat.size;
-
-						if (stashedInfo[2] !== hash) {
-							stashedInfo[2] = hash;
-
-							const relativePath = path.toRelativePath(stashedPath, paths.rootDir);
-							const targetedPath = path.toPath(paths.distDir, relativePath);
-
-							stash.shouldUpdate = true;
-							stash.files.set(cachingPath, stashedInfo);
-							stash.fileNames.push(targetedPath);
-
-							operations.files.push(async () => await fs.copyFile(stashedPath, targetedPath));
-						}
-					}
-				});
+			if (!globbedFileSet.has(sourceFileName)) {
+				this.#cacheChanged = true;
+				this.#queueDelete(targetFileName);
+				continue;
 			}
+
+			cacheOperations.push(async () => {
+				const stat = await fs.getFileStats(sourceFileName);
+
+				if (stat.mtimeMs === cachedInfo[0] && stat.size === cachedInfo[1]) {
+					const hasTarget = await fs.exists(targetFileName);
+
+					this.#rememberCachedFile(relativeSourceFileName, cachedInfo, targetFileName);
+
+					if (!hasTarget) {
+						this.#cacheChanged = true;
+						this.#queueCopy(sourceFileName, targetFileName);
+					}
+
+					return;
+				}
+
+				const hash = await fs.hash(sourceFileName);
+				const hasChanged = cachedInfo[2] !== hash;
+
+				let hasTarget = true;
+
+				if (!hasChanged) {
+					hasTarget = await fs.exists(targetFileName);
+				}
+
+				const nextInfo: FileCache = [stat.mtimeMs, stat.size, hash];
+
+				this.#rememberCachedFile(relativeSourceFileName, nextInfo, targetFileName);
+				this.#cacheChanged = true;
+
+				if (hasChanged || !hasTarget) {
+					this.#queueCopy(sourceFileName, targetFileName);
+				}
+			});
 		}
 
 		for (const globbedFile of globbedFiles) {
-			if (!Object.hasOwn(stash.cache, globbedFile)) {
-				const cachingPath = path.toRelativePath(globbedFile, paths.workDir);
-				const relativePath = path.toRelativePath(globbedFile, paths.rootDir);
-				const targetedPath = path.toPath(paths.distDir, relativePath);
+			if (!this.#cachedInfoBySourceFileName.has(globbedFile)) {
+				const relativeSourceFileName = path.toRelativePath(globbedFile, this.#workDir);
+				const targetFileName = this.#targetFileName(globbedFile);
 
-				operations.cache.push(async () => {
+				cacheOperations.push(async () => {
 					const [stat, hash] = await Promise.all([fs.getFileStats(globbedFile), fs.hash(globbedFile)]);
 
-					stash.shouldUpdate = true;
-					stash.files.set(cachingPath, [stat.mtimeMs, stat.size, hash]);
-					stash.fileNames.push(targetedPath);
+					this.#rememberCachedFile(relativeSourceFileName, [stat.mtimeMs, stat.size, hash], targetFileName);
+					this.#cacheChanged = true;
 				});
 
-				operations.files.push(async () => await fs.copyFile(globbedFile, targetedPath));
+				this.#queueCopy(globbedFile, targetFileName);
 			}
 		}
 
-		return this.#operate(operations.cache);
+		await this.#runOperations(cacheOperations);
 	}
 
 	async saveCache(): Promise<void> {
-		const { cache, operations, paths, stash } = this.#internals;
+		if (this.#cacheChanged) {
+			this.#cache.fileNames = [...this.#nextCacheByRelativeSourceFileName.keys()];
+			this.#cache.fileInfos = [...this.#nextCacheByRelativeSourceFileName.values()];
 
-		if (stash.shouldUpdate) {
-			cache.fileNames = [...stash.files.keys()];
-			cache.fileInfos = [...stash.files.values()];
+			await fs.ensureFileDir(this.#cacheFile, ...this.#targetFileNameSet);
+			await this.#runOperations(this.#pendingFileOperations);
+			await fs.writeFile(this.#cacheFile, json.to(this.#cache));
 
-			await fs.ensureFileDir(paths.cacheFile, ...stash.fileNames);
-
-			await Promise.all([fs.writeFile(paths.cacheFile, json.to(cache)), this.#operate(operations.files)]);
+			this.#cachedInfoBySourceFileName = new Map(
+				[...this.#nextCacheByRelativeSourceFileName].map(([fileName, info]) => [path.toPath(this.#workDir, fileName), info]),
+			);
+			this.#pendingFileOperations = [];
+			this.#cacheChanged = false;
 		}
 	}
 
-	get rootDir(): string {
-		return this.#internals.paths.rootDir.pathname;
+	#queueCopy(sourceFileName: string, targetFileName: string): void {
+		this.#pendingFileOperations.push(async () => {
+			await fs.copyFile(sourceFileName, targetFileName);
+		});
 	}
 
-	get distDir(): string {
-		return this.#internals.paths.distDir.pathname;
+	#queueDelete(fileName: string): void {
+		this.#pendingFileOperations.push(async () => {
+			await fs.deleteFile(fileName).catch((error: NodeJS.ErrnoException) => {
+				if (error?.code !== "ENOENT") {
+					throw error;
+				}
+			});
+		});
 	}
 
-	get stashedFiles(): string[] {
-		return this.#internals.stash.fileNames;
+	#rememberCachedFile(relativeSourceFileName: string, cacheInfo: FileCache, targetFileName: string): void {
+		this.#nextCacheByRelativeSourceFileName.set(relativeSourceFileName, cacheInfo);
+		this.#targetFileNameSet.add(targetFileName);
 	}
 
-	async #operate(operations: FileOperation[]): Promise<void> {
-		await Promise.all(operations.map(operate));
+	async #runOperations(operations: FileOperation[]): Promise<void> {
+		await Promise.all(
+			operations.map(async (operation) => {
+				await operation();
+			}),
+		);
+	}
+
+	#targetFileName(sourceFileName: string): string {
+		return path.toPath(this.#distDir, path.toRelativePath(sourceFileName, this.#rootDir));
 	}
 }
 
@@ -207,7 +217,11 @@ const isCacheFileName = (fileName: unknown): fileName is string => typeof fileNa
 const isCacheFileInfo = (fileInfo: unknown): fileInfo is FileCache =>
 	Array.isArray(fileInfo) && fileInfo.length === 3 && typeof fileInfo[0] === "number" && typeof fileInfo[1] === "number" && typeof fileInfo[2] === "string";
 
-const operate = (operation: FileOperation) => operation();
+const createCache = (): Cache => ({
+	fileNames: [],
+	fileInfos: [],
+	version: "0.2.0",
+});
 
 export interface Cache {
 	fileNames: string[];
@@ -219,8 +233,6 @@ export type FileCache = [time: number, size: number, hash: string];
 
 export type FileOperation = () => Promise<void>;
 
-// const emptyBuffer = Buffer.from([])
-
 export interface CopyOptions {
 	cacheFile?: string | undefined;
 	workDir?: string | undefined;
@@ -229,22 +241,3 @@ export interface CopyOptions {
 	include?: string | undefined | (string | undefined)[];
 	exclude?: string | undefined | (string | undefined)[];
 }
-
-// #region Types
-
-// export interface CacheRecord extends Record<string, CacheEntry> {}
-
-// export type { CacheEntry }
-
-export interface FileStats {
-	mtime: number;
-	size: number;
-}
-
-export interface CopyBuildInfo {
-	fileNames: string[];
-	fileInfos: CopyFileInfo[];
-	version: string;
-}
-
-export type CopyFileInfo = [time: number, size: number, hash: string];

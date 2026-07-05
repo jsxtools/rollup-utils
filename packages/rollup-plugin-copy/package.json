@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-copy",
-	"description": "A Rollup plugin for copying files during the build process.",
-	"version": "0.4.0",
+	"description": "A Rollup, Rolldown, and Vite-compatible plugin for copying files during the build process.",
+	"version": "0.5.0",
 	"type": "module",
 	"exports": {
 		".": "./dist/copy-rollup-plugin.js",
@@ -9,6 +9,17 @@
 	},
 	"files": [
 		"dist"
+	],
+	"keywords": [
+		"rollup",
+		"rollup-plugin",
+		"rolldown",
+		"rolldown-plugin",
+		"vite",
+		"vite-plugin",
+		"copy",
+		"assets",
+		"static-assets"
 	],
 	"scripts": {
 		"build": "tsc",
@@ -26,7 +37,7 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-copy",
 	"dependencies": {
-		"@jsxtools/rollup-plugin-utils": "^0.5.0"
+		"@jsxtools/rollup-plugin-utils": "^0.6.0"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.9",
@@ -35,5 +46,10 @@
 	},
 	"peerDependencies": {
 		"rollup": "^4.59.0"
+	},
+	"peerDependenciesMeta": {
+		"rollup": {
+			"optional": true
+		}
 	}
 }

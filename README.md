@@ -1,84 +1,44 @@
 # Rollup Utils
 
-A collection of Rollup plugins and utilities.
+> Small Rollup-compatible tools for TypeScript-first build pipelines.
 
-## Packages
+Rollup Utils is a TypeScript monorepo for projects that want focused plugins instead of a framework. The packages cover TypeScript compilation, TypeScript-aware resolution, Custom Elements Manifest generation, static file copying, and shared plugin utilities for Rollup, Rolldown, and Vite-compatible hosts.
 
-This monorepo contains the following packages:
+## What's included
 
-### [@jsxtools/rollup-plugin-cem](./packages/rollup-plugin-cem)
+| Package                                                                     | Version | Purpose                                                                                        |
+| --------------------------------------------------------------------------- | ------: | ---------------------------------------------------------------------------------------------- |
+| [@jsxtools/rollup-plugin-cem](./packages/rollup-plugin-cem)                 |   0.7.0 | Generates a Custom Elements Manifest from TypeScript source files already in the module graph. |
+| [@jsxtools/rollup-plugin-copy](./packages/rollup-plugin-copy)               |   0.5.0 | Copies static files incrementally, using cached file metadata to avoid unnecessary work.       |
+| [@jsxtools/rollup-plugin-tsc](./packages/rollup-plugin-tsc)                 |   0.6.0 | Compiles TypeScript with the Compiler API and emits real bundler chunks, assets, and metadata. |
+| [@jsxtools/rollup-plugin-tsc-resolve](./packages/rollup-plugin-tsc-resolve) |   0.2.1 | Resolves imports through TypeScript, including `baseUrl`, `paths`, and `moduleResolution`.     |
+| [@jsxtools/rollup-plugin-utils](./packages/rollup-plugin-utils)             |   0.6.0 | Provides small utility modules for authoring Rollup, Rolldown, and Vite-compatible plugins.    |
+| [@jsxtools/cem-analyzer](./packages/cem-analyzer)                           |   0.6.1 | Provides typed Custom Elements Manifest analyzer APIs used by `@jsxtools/rollup-plugin-cem`.   |
 
-A Rollup plugin for generating Custom Elements Manifest (CEM) files during the build process.
+## Compatibility
 
-- **Version**: 0.1.0
-- **License**: MIT-0
-
-### [@jsxtools/rollup-plugin-copy](./packages/rollup-plugin-copy)
-
-A Rollup plugin for copying files during the build process.
-
-- **Version**: 0.1.0
-- **License**: MIT-0
-
-### [@jsxtools/rollup-plugin-tsc](./packages/rollup-plugin-tsc)
-
-A Rollup plugin for TypeScript compilation.
-
-- **Version**: 0.1.0
-- **License**: MIT-0
-
-### [@jsxtools/rollup-plugin-utils](./packages/rollup-plugin-utils)
-
-A collection of utilities for Rollup plugins.
-
-- **Version**: 0.1.0
-- **License**: MIT-0
-
-### [@jsxtools/cem-analyzer](./packages/cem-analyzer)
-
-A typed release of the Custom Elements Manifest analyzer. This is an internal dependency used by the rollup-plugin-cem.
-
-- **Version**: 0.1.0
-- **License**: MIT-0
+The plugin packages use Rollup-compatible hooks and are intended for Rollup, Rolldown, and Vite-compatible plugin pipelines. Rollup is listed as an optional peer dependency where it is only needed for Rollup projects or TypeScript plugin types.
 
 ## Development
 
-This is a TypeScript monorepo using npm workspaces.
-
-### Building
-
 ```shell
+npm install
 npm run build
+npm test
 ```
 
-### Testing
-
-Run tests for specific plugins:
+Useful targeted checks:
 
 ```shell
-# Test copy plugin
-npm run test:copy
-
-# Test TypeScript plugin
-npm run test:tsc
-
-# Test TypeScript plugin with clean build
-npm run clean:test:tsc
-```
-
-### Code Quality
-
-```shell
-# Format code
-npm run format
-
-# Lint code
+npm run typecheck
 npm run lint
-
-# Check and fix all issues
-npm run check
+npm run format:check
 ```
+
+Targeted package tests are available as `npm run test:cem`, `npm run test:copy`, `npm run test:tsc`, `npm run test:tsc-resolve`, and `npm run test:utils`.
+
+Use `npm run check` and `npm run format` to apply supported automatic fixes.
 
 ## License
 
-MIT-0
+[MIT-0](./LICENSE.md)

@@ -1,9 +1,10 @@
-import { type CEM, create, type Plugin, type PluginOption, type TS } from "@jsxtools/cem-analyzer/create";
+import { create } from "@jsxtools/cem-analyzer/create";
+import type { CEM, Plugin, PluginOption, TS } from "@jsxtools/cem-analyzer/types";
 import * as array from "@jsxtools/rollup-plugin-utils/array";
 import * as fs from "@jsxtools/rollup-plugin-utils/file";
 import * as json from "@jsxtools/rollup-plugin-utils/json";
 import * as path from "@jsxtools/rollup-plugin-utils/path";
-import { match } from "@jsxtools/rollup-plugin-utils/pattern";
+import { Pattern } from "@jsxtools/rollup-plugin-utils/pattern";
 import * as str from "@jsxtools/rollup-plugin-utils/string";
 
 const enum Default {
@@ -14,73 +15,87 @@ const enum Default {
 }
 
 export class CemAPI {
-	#internals = {
-		options: getNormalizedOptions(),
-		modules: new SourceSet(),
-		plugins: new PluginSet(),
-		package: {
-			schemaVersion: "1.0.0",
-			readme: "",
-			modules: [],
-		} as CEM.Package,
-	};
-
-	get options(): CemNormalizedOptions {
-		return this.#internals.options;
-	}
-
-	set options(options: CemOptions) {
-		const internals = this.#internals;
-
-		internals.options = getNormalizedOptions(options);
-
-		internals.modules.clear(this.options);
-		internals.plugins.clear();
-
-		internals.modules.add(...array.from(internals.options.modules, str.hasTrimmedValue));
-		internals.plugins.add(...array.from(internals.options.plugins, str.hasTrimmedValue));
-	}
+	#modules = new SourceSet();
+	#options = getNormalizedOptions();
+	#package = createPackage();
+	#plugins = new PluginSet();
+	#program?: TS.Program;
+	#typeChecker?: TS.TypeChecker;
 
 	get manifestFile(): string {
-		return this.#internals.options.manifestFile;
+		return this.#options.manifestFile;
 	}
 
-	get modules(): SourceSet {
-		return this.#internals.modules;
+	get manifest(): CEM.Package {
+		return this.#package;
+	}
+
+	get program(): TS.Program | undefined {
+		return this.#program;
+	}
+
+	get sourceFiles(): readonly TS.SourceFile[] {
+		return [...this.#modules];
+	}
+
+	get typeChecker(): TS.TypeChecker | undefined {
+		return this.#typeChecker ?? this.#program?.getTypeChecker();
+	}
+
+	addModule(sourceFile: TS.SourceFile): void {
+		this.#modules.add(sourceFile);
+	}
+
+	addModules(...sourceFiles: TS.SourceFile[]): void {
+		this.#modules.add(...sourceFiles);
+	}
+
+	clearModules(): void {
+		this.#modules.clear(this.#options);
 	}
 
 	init(options?: CemOptions): void {
-		this.options = getNormalizedOptions(options);
+		this.#options = getNormalizedOptions(options);
+
+		this.#plugins.clear();
+		this.#plugins.add(...this.#options.plugins);
+		this.#program = this.#options.program;
+		this.#typeChecker = this.#options.typeChecker;
+
+		this.clearModules();
+		this.addModules(...this.#options.modules);
 	}
 
 	async generate(): Promise<boolean> {
-		const internals = this.#internals;
+		if (this.#modules.size === 0) {
+			return false;
+		}
+
 		const manifest = getValueWithRelativePaths(
 			create({
-				modules: [...internals.modules],
-				plugins: [...internals.plugins],
+				modules: [...this.#modules],
+				plugins: [...this.#plugins],
 			}),
-			path.toDirPath(internals.options.workDir),
+			path.toDirPath(this.#options.workDir),
 		);
 
 		if (manifest.modules.length === 0) {
 			return false;
 		}
 
-		internals.package = await this.loadManifest();
-
-		internals.package.schemaVersion = manifest.schemaVersion;
-		internals.package.readme = manifest.readme;
+		const packageManifest = await this.loadManifest();
+		const packageModules = new Map(packageManifest.modules.map((module) => [module.path, module]));
 
 		for (const module of manifest.modules) {
-			const existingModuleIndex = internals.package.modules.findIndex((oldModule) => oldModule.path === module.path);
-
-			if (existingModuleIndex !== -1) {
-				internals.package.modules.splice(existingModuleIndex, 1, module);
-			} else {
-				internals.package.modules.push(module);
-			}
+			packageModules.set(module.path, module);
 		}
+
+		this.#package = {
+			...packageManifest,
+			schemaVersion: manifest.schemaVersion,
+			readme: manifest.readme,
+			modules: [...packageModules.values()],
+		};
 
 		return true;
 	}
@@ -92,11 +107,7 @@ export class CemAPI {
 			return manifest;
 		}
 
-		return {
-			schemaVersion: "1.0.0",
-			readme: "",
-			modules: [],
-		};
+		return createPackage();
 	}
 
 	async saveManifest(): Promise<void> {
@@ -106,45 +117,54 @@ export class CemAPI {
 
 	async updateManifest(): Promise<void> {
 		if (await this.generate()) {
-			this.saveManifest();
+			await this.saveManifest();
 		}
 	}
 
 	toJSON(): string {
-		return json.to(this.#internals.package);
+		return json.to(this.#package);
+	}
+
+	// biome-ignore lint/suspicious/useAdjacentOverloadSignatures: preference
+	static init(options?: CemOptions): CemAPI {
+		const api = new CemAPI();
+
+		api.init(options);
+
+		return api;
 	}
 }
 
 export class SourceSet extends Set<TS.SourceFile> {
-	#seen = new Set<string>();
-	#options!: CemNormalizedOptions;
+	#excludePatterns: Pattern[] = [];
+	#includePatterns: Pattern[] = [];
+	#seenSourceFileNames = new Set<string>();
+	#workDir = path.toDirPath(Default.WorkDir);
 
 	override add(...sourceFiles: TS.SourceFile[]): this {
-		if (!this.#options.include.length) {
+		if (!this.#includePatterns.length) {
 			return this;
 		}
 
 		for (const sourceFile of sourceFiles) {
-			if (sourceFile == null || typeof sourceFile.fileName !== "string" || this.#seen.has(sourceFile.fileName)) {
+			if (sourceFile == null || typeof sourceFile.fileName !== "string" || this.#seenSourceFileNames.has(sourceFile.fileName)) {
 				continue;
 			}
 
-			const relativePath = path.toRelativePath(sourceFile.fileName, this.#options.workDir, { explicit: false });
-
-			// use picomatch to match the file name against the include and exclude patterns
-			const isIncluded = this.#options.include.some((pattern) => match(pattern, relativePath));
+			const relativePath = path.toRelativePath(sourceFile.fileName, this.#workDir, { explicit: false });
+			const isIncluded = this.#includePatterns.some((pattern) => pattern.match(relativePath));
 
 			if (!isIncluded) {
 				continue;
 			}
 
-			const isExcluded = this.#options.exclude.some((pattern) => match(pattern, sourceFile.fileName));
+			const isExcluded = this.#excludePatterns.some((pattern) => pattern.match(relativePath));
 
 			if (isExcluded) {
 				continue;
 			}
 
-			this.#seen.add(sourceFile.fileName);
+			this.#seenSourceFileNames.add(sourceFile.fileName);
 
 			super.add(sourceFile);
 		}
@@ -153,9 +173,12 @@ export class SourceSet extends Set<TS.SourceFile> {
 	}
 
 	override clear(init?: CemOptions): void {
-		this.#options = getNormalizedOptions(init);
+		const options = getNormalizedOptions(init);
 
-		this.#seen.clear();
+		this.#excludePatterns = options.exclude.map((pattern) => new Pattern(pattern));
+		this.#includePatterns = options.include.map((pattern) => new Pattern(pattern));
+		this.#seenSourceFileNames.clear();
+		this.#workDir = options.workDir;
 
 		super.clear();
 	}
@@ -174,22 +197,42 @@ export const getNormalizedOptions = (init?: CemOptions): CemNormalizedOptions =>
 		exclude: array.from(init?.exclude).map(str.trim),
 		modules: array.from(init?.modules),
 		plugins: array.from(init?.plugins).flat(),
+		program: init?.program,
+		typeChecker: init?.typeChecker ?? init?.program?.getTypeChecker(),
 	};
 };
 
-const getValueWithRelativePaths = <T>(value: T, path: string): T => {
+export const getSourceFileNameFromModulePath = (modulePath: string, workDir = Default.WorkDir): string => path.toPath(path.toDirPath(workDir), modulePath);
+
+export const getSourceFilesByFileName = (sourceFiles: Iterable<TS.SourceFile>): Map<string, TS.SourceFile> => {
+	const sourceFilesByFileName = new Map<string, TS.SourceFile>();
+
+	for (const sourceFile of sourceFiles) {
+		sourceFilesByFileName.set(path.toPath(sourceFile.fileName), sourceFile);
+	}
+
+	return sourceFilesByFileName;
+};
+
+const createPackage = (): CEM.Package => ({
+	schemaVersion: "1.0.0",
+	readme: "",
+	modules: [],
+});
+
+const getValueWithRelativePaths = <T>(value: T, basePath: string): T => {
 	if (typeof value === "string") {
 		let normalized = String(value);
 
 		normalized = normalized.startsWith("//") ? normalized.slice(1) : normalized;
-		normalized = normalized.startsWith("/") ? `./${normalized.slice(path.length)}` : normalized;
+		normalized = normalized.startsWith(basePath) ? `./${normalized.slice(basePath.length)}` : normalized;
 
 		return normalized as T;
 	} else if (value && typeof value === "object") {
 		const result = Array.isArray(value) ? ([] as T) : ({} as T);
 
 		for (const [name, data] of Object.entries(value)) {
-			result[name as keyof typeof value] = getValueWithRelativePaths(data, path) as never;
+			result[name as keyof typeof value] = getValueWithRelativePaths(data, basePath) as never;
 		}
 
 		return result;
@@ -199,15 +242,15 @@ const getValueWithRelativePaths = <T>(value: T, path: string): T => {
 };
 
 export class PluginSet extends Set<Plugin> {
-	#seen = new Set<string>();
+	#seenPluginNames = new Set<string>();
 
 	override add(...plugins: PluginOption[]): this {
 		for (const plugin of plugins.flat()) {
-			if (plugin == null || typeof plugin.name !== "string" || this.#seen.has(plugin.name)) {
+			if (plugin == null || typeof plugin.name !== "string" || this.#seenPluginNames.has(plugin.name)) {
 				continue;
 			}
 
-			this.#seen.add(plugin.name);
+			this.#seenPluginNames.add(plugin.name);
 
 			super.add(plugin);
 		}
@@ -216,7 +259,7 @@ export class PluginSet extends Set<Plugin> {
 	}
 
 	override clear(): void {
-		this.#seen.clear();
+		this.#seenPluginNames.clear();
 
 		super.clear();
 	}
@@ -230,7 +273,9 @@ export interface CemOptions {
 	include?: string | string[];
 	exclude?: string | string[];
 	modules?: TS.SourceFile[];
+	program?: TS.Program;
 	plugins?: PluginOption[];
+	typeChecker?: TS.TypeChecker;
 }
 
 export interface CemNormalizedOptions {
@@ -241,7 +286,9 @@ export interface CemNormalizedOptions {
 	include: string[];
 	exclude: string[];
 	modules: TS.SourceFile[];
+	program?: TS.Program;
 	plugins: Plugin[];
+	typeChecker?: TS.TypeChecker;
 }
 
 export { catalystPlugin } from "@jsxtools/cem-analyzer/features/framework-plugins/catalyst/catalyst";

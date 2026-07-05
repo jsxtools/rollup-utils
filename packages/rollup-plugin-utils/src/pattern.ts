@@ -7,6 +7,8 @@
 //   glob.match("src/a/b/x.ts") // true
 
 export class Pattern {
+	#segments: Segment[] = [];
+
 	constructor(pattern: string) {
 		// quick scan: bail to literal-fast-path if there are no meta chars
 		let hasMeta = false;
@@ -41,23 +43,19 @@ export class Pattern {
 			segments = parseAndPrecompile(pattern);
 		}
 
-		this.#internals.segments = segments;
+		this.#segments = segments;
 	}
 
 	match(path: string, includeDot = false): boolean {
-		return matchPathAgainstCompiled(this.#internals.segments, path, includeDot);
+		return matchPathAgainstCompiled(this.#segments, path, includeDot);
 	}
 
 	static match(pattern: string, path: string, includeDot = false): boolean {
-		return new this(pattern).match(path, includeDot);
+		return getPattern(pattern).match(path, includeDot);
 	}
-
-	#internals = {
-		segments: [] as Segment[],
-	};
 }
 
-export const match = Pattern.match.bind(Pattern);
+export const match = (pattern: string, path: string, includeDot = false): boolean => getPattern(pattern).match(path, includeDot);
 
 // #region Internals
 
@@ -78,13 +76,23 @@ const matchPathAgainstCompiled = (segments: Segment[], path: string, includeDot:
 
 	// no-globstar fast path: segment lengths must match, then straight tests
 	if (!containsGlobStar) {
-		if (parts.length !== segments.length) return false;
+		if (parts.length !== segments.length) {
+			return false;
+		}
+
 		for (let index = 0; index < parts.length; ++index) {
 			const segment = segments[index];
 			const part = parts[index];
-			if (isDotfile(part, includeDot, segment.explicitLeadingDot)) return false;
-			if (!segment.re!.test(part)) return false;
+
+			if (isDotfile(part, includeDot, segment.explicitLeadingDot)) {
+				return false;
+			}
+
+			if (!segment.re!.test(part)) {
+				return false;
+			}
 		}
+
 		return true;
 	}
 
@@ -100,7 +108,10 @@ const matchWithGlobStarDP = (segments: Segment[], parts: string[], includeDot: b
 	const recur = (i: number, j: number): boolean => {
 		const k = i * 1000 + j;
 		const cached = memo.get(k);
-		if (cached !== undefined) return cached;
+
+		if (cached !== undefined) {
+			return cached;
+		}
 
 		let result = false;
 
@@ -177,7 +188,10 @@ const parseAndPrecompile = (pattern: string): Segment[] => {
 			const [escaped, nextIndex] = handleEscape(pattern, index, length);
 
 			if (!sawFirstUnit && index + 1 < length) {
-				if (pattern[index + 1] === ".") explicitLeadingDot = true;
+				if (pattern[index + 1] === ".") {
+					explicitLeadingDot = true;
+				}
+
 				sawFirstUnit = true;
 			}
 
@@ -226,7 +240,9 @@ const parseAndPrecompile = (pattern: string): Segment[] => {
 		if (ch === "*") {
 			let runEnd = index + 1;
 
-			while (runEnd < length && pattern[runEnd] === "*") ++runEnd;
+			while (runEnd < length && pattern[runEnd] === "*") {
+				++runEnd;
+			}
 
 			if (runEnd - index >= 2) {
 				flushCurrentSegment();
@@ -266,7 +282,10 @@ const parseAndPrecompile = (pattern: string): Segment[] => {
 
 		if (start < index) {
 			if (!sawFirstUnit) {
-				if (pattern[start] === ".") explicitLeadingDot = true;
+				if (pattern[start] === ".") {
+					explicitLeadingDot = true;
+				}
+
 				sawFirstUnit = true;
 			}
 
@@ -371,7 +390,9 @@ const splitAlternatesTopLevel = (pattern: string, start: number, end: number): A
 			}
 
 			if (ch === ")") {
-				if (parenDepth > 0) --parenDepth;
+				if (parenDepth > 0) {
+					--parenDepth;
+				}
 
 				continue;
 			}
@@ -461,6 +482,19 @@ const compileSubpatternToRegexSource = (pattern: string, start: number, end: num
 };
 
 const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getPattern = (pattern: string): Pattern => {
+	let compiledPattern = patternCache.get(pattern);
+
+	if (!compiledPattern) {
+		compiledPattern = new Pattern(pattern);
+		patternCache.set(pattern, compiledPattern);
+	}
+
+	return compiledPattern;
+};
+
+const patternCache = new Map<string, Pattern>();
 
 // #region Types
 

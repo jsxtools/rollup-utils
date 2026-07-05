@@ -1,18 +1,19 @@
 import type * as Rollup from "rollup";
 import { TscResolveAPI, type TscResolveOptions } from "./tsc-resolve-api.js";
 
-export function rollupPluginTscResolve(pluginOptions?: TscResolveOptions): Rollup.Plugin {
+export function rollupPluginTscResolve(pluginOptions?: TscResolveOptions): CompatiblePlugin {
 	const resolve = new TscResolveAPI();
 	const rollup = {
 		/** Whether this is the first run. */
 		firstRun: true,
 	};
 
-	return {
+	const plugin = {
 		name: "rollup-plugin-tsc-resolve",
 		buildStart(): void {
 			if (rollup.firstRun) {
 				resolve.init(pluginOptions);
+				rollup.firstRun = false;
 			}
 		},
 		resolveId(id, importer): Rollup.ResolveIdResult {
@@ -26,8 +27,11 @@ export function rollupPluginTscResolve(pluginOptions?: TscResolveOptions): Rollu
 				return resolvedFileName;
 			}
 		},
-		generateBundle(): Promise<void> | void {
-			rollup.firstRun = false;
-		},
-	};
+	} satisfies Rollup.Plugin;
+
+	return plugin;
+}
+
+interface CompatiblePlugin {
+	name: string;
 }

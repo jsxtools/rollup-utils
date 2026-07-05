@@ -36,6 +36,14 @@ export default defineConfig({
 						fileName: file.replace(".ts", ".d.ts"),
 						source: readFileSync(resolve("src", file), "utf8"),
 					});
+
+					if (file === "types.ts") {
+						this.emitFile({
+							type: "asset",
+							fileName: "types.js",
+							source: "export {};\n",
+						});
+					}
 				}
 			},
 		},

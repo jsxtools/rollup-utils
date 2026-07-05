@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-utils",
-	"description": "A collection of utilities for authoring Rollup plugins.",
-	"version": "0.5.0",
+	"description": "A collection of utilities for authoring Rollup, Rolldown, and Vite-compatible plugins.",
+	"version": "0.6.0",
 	"type": "module",
 	"exports": {
 		"./array": "./dist/array.js",
@@ -10,11 +10,20 @@
 		"./options": "./dist/options.js",
 		"./path": "./dist/path.js",
 		"./pattern": "./dist/pattern.js",
-		"./string": "./dist/string.js",
-		"./virtual-asset": "./dist/virtual-asset.js"
+		"./string": "./dist/string.js"
 	},
 	"files": [
 		"dist"
+	],
+	"keywords": [
+		"rollup",
+		"rollup-plugin",
+		"rolldown",
+		"rolldown-plugin",
+		"vite",
+		"vite-plugin",
+		"plugin-utils",
+		"build-tools"
 	],
 	"scripts": {
 		"build": "tsc",
@@ -33,10 +42,14 @@
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-utils",
 	"devDependencies": {
 		"@types/node": "24.10.9",
-		"rollup": "^4.59.0",
 		"typescript": "^6.0.3"
 	},
 	"peerDependencies": {
 		"rollup": "^4.59.0"
+	},
+	"peerDependenciesMeta": {
+		"rollup": {
+			"optional": true
+		}
 	}
 }

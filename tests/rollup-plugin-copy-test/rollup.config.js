@@ -4,6 +4,7 @@ import { rollupPluginCopy } from "@jsxtools/rollup-plugin-copy";
 import { defineConfig } from "rollup";
 
 export default defineConfig({
+	input: "src/ignore.ts",
 	output: {
 		dir: "dist",
 		format: "es",

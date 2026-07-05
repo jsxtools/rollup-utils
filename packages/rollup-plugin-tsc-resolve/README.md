@@ -1,47 +1,42 @@
 # @jsxtools/rollup-plugin-tsc-resolve
 
-**rollup-plugin-tsc-resolve** is a [rollup](https://rollupjs.org/) plugin that resolves TypeScript module paths using TypeScript's [Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API).
+> Let the bundler resolve imports the same way TypeScript does.
 
-This plugin uses `tsconfig.json` to resolve module imports according to TypeScript's path mapping, `baseUrl`, and other resolution settings.
+`@jsxtools/rollup-plugin-tsc-resolve` is a Rollup, Rolldown, and Vite-compatible plugin that resolves imports with TypeScript's module resolution algorithm. It reads `tsconfig.json`, including `baseUrl`, `paths`, `moduleResolution`, and extended configuration.
 
-## Installation
+## Highlights
+
+- Resolves imports through TypeScript's `resolveModuleName` API.
+- Honors `baseUrl`, `paths`, package conditions, and the active `moduleResolution` mode.
+- Follows extended TypeScript configurations.
+- Caches resolved ids during a build for fast repeated lookups.
+
+## Install
 
 ```shell
-npm install @jsxtools/rollup-plugin-tsc-resolve
+npm install --save-dev @jsxtools/rollup-plugin-tsc-resolve typescript
 ```
 
-## Usage
+## Quick start
 
 ```javascript
 import { rollupPluginTscResolve } from "@jsxtools/rollup-plugin-tsc-resolve";
 
 export default {
-	plugins: [rollupPluginTscResolve(/* optional configuration */)],
+	plugins: [rollupPluginTscResolve()],
 };
 ```
 
-## Features
+Use this before plugins that load or transform TypeScript modules when those plugins expect already-resolved ids.
 
-- Resolves module paths using TypeScript's module resolution algorithm.
-- Supports `paths` mapping from `tsconfig.json`.
-- Supports `baseUrl` resolution.
-- Works with project references and extended configurations.
+## Options
 
-## Configuration Options
-
-- `configFile` - TypeScript configuration file (default: `tsconfig.json`).
-- `workDir` - Current working directory (default: current process directory).
-
-```js
-rollupPluginTscResolve({
-	workDir: ".",
-	configFile: "tsconfig.json",
-});
-```
+| Option       | Default         | Description                                                    |
+| ------------ | --------------- | -------------------------------------------------------------- |
+| `workDir`    | `.`             | Base directory used to find and resolve the TypeScript config. |
+| `configFile` | `tsconfig.json` | TypeScript configuration file to load.                         |
 
 ## API
-
-The plugin also exports a separate API for programmatic use:
 
 ```javascript
 import { TscResolveAPI } from "@jsxtools/rollup-plugin-tsc-resolve/api";
@@ -52,14 +47,14 @@ resolver.init({
 	configFile: "tsconfig.json",
 });
 
-const resolvedPath = resolver.resolve("@/components/Button", "/path/to/importer.ts");
+const resolvedPath = resolver.resolve("@/components/Button", "/project/src/main.ts");
 ```
 
-## Peer Dependencies
+## Peer dependencies
 
-- `rollup` ^4.6.0
-- `typescript` ^5.4.5
+- `rollup` `^4.59.0` — optional for compatible hosts.
+- `typescript` `^5.4.5 || ^6.0.0`.
 
 ## License
 
-MIT-0
+[MIT-0](../../LICENSE.md)

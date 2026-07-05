@@ -1,7 +1,7 @@
 {
 	"name": "@jsxtools/rollup-plugin-cem",
-	"description": "A Rollup plugin for generating a Custom Elements Manifest file from the Rollup module graph.",
-	"version": "0.6.0",
+	"description": "A Rollup, Rolldown, and Vite-compatible plugin for generating a Custom Elements Manifest file from the module graph.",
+	"version": "0.7.0",
 	"type": "module",
 	"exports": {
 		".": "./dist/cem-rollup-plugin.js",
@@ -9,6 +9,18 @@
 	},
 	"files": [
 		"dist"
+	],
+	"keywords": [
+		"rollup",
+		"rollup-plugin",
+		"rolldown",
+		"rolldown-plugin",
+		"vite",
+		"vite-plugin",
+		"custom-elements",
+		"custom-elements-manifest",
+		"web-components",
+		"cem"
 	],
 	"scripts": {
 		"build": "tsc",
@@ -26,8 +38,8 @@
 	},
 	"homepage": "https://github.com/jsxtools/rollup-utils/tree/main/packages/rollup-plugin-cem",
 	"dependencies": {
-		"@jsxtools/cem-analyzer": "^0.6.0",
-		"@jsxtools/rollup-plugin-utils": "^0.5.0"
+		"@jsxtools/cem-analyzer": "^0.6.1",
+		"@jsxtools/rollup-plugin-utils": "^0.6.0"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.9",
@@ -36,5 +48,10 @@
 	},
 	"peerDependencies": {
 		"rollup": "^4.59.0"
+	},
+	"peerDependenciesMeta": {
+		"rollup": {
+			"optional": true
+		}
 	}
 }

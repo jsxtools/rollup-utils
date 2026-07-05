@@ -1,3 +1,4 @@
-import type { Plugin } from "../../../create.js";
+import type { Plugin } from "../../../types.js";
 
-export declare const catalystPlugin2: () => Plugin[];
+/** Framework plugin set for GitHub Catalyst v2 components. */
+export declare function catalystPlugin2(): Plugin[];

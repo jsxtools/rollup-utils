@@ -1,11 +1,9 @@
 import { getDirs } from "@jsxtools/rollup-plugin-utils/options";
-import { VirtualAsset } from "@jsxtools/rollup-plugin-utils/virtual-asset";
 import type * as Rollup from "rollup";
 import { CopyAPI, type CopyOptions } from "./copy-api.js";
 
-export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => {
+export const rollupPluginCopy = (pluginOptions?: CopyOptions): CompatiblePlugin => {
 	const copy = new CopyAPI();
-	const virtualAsset = new VirtualAsset("rollup-plugin-copy");
 	const rollup = {
 		/** Whether this is the first run. */
 		firstRun: true,
@@ -13,14 +11,11 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 		/** Whether this is a watch run. */
 		watchRun: false,
 
-		/** Code for the virtual entry point. */
-		codeForVirtualId: "export let _",
-
 		/** Deferred promise used to optimize async operations. */
 		deferred: Promise.resolve(),
 	};
 
-	return {
+	const plugin = {
 		name: "rollup-plugin-copy",
 		options(options: Rollup.RollupOptions): Rollup.RollupOptions {
 			if (rollup.firstRun) {
@@ -32,8 +27,6 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 				rollup.deferred = rollup.deferred.then(() => copy.loadCache());
 			}
 
-			virtualAsset.options(options);
-
 			return options;
 		},
 		buildStart(): void | Promise<void> {
@@ -43,25 +36,13 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 				return rollup.deferred;
 			}
 		},
-		resolveId(id): Rollup.ResolveIdResult {
-			// conditionally return virtual module source
-			if (id === virtualAsset.virtualId) {
-				return { id };
-			}
-		},
-		load(id): Rollup.LoadResult {
-			// conditionally return virtual module source
-			if (id === virtualAsset.virtualId) {
-				return {
-					code: rollup.codeForVirtualId,
-				};
-			}
-		},
-		generateBundle(options, bundle): void {
-			virtualAsset.generateBundle(options, bundle);
-
+		generateBundle(): void {
 			if (this.meta.watchMode) {
 				this.addWatchFile(copy.cacheFile);
+
+				for (const fileName of copy.sourceFiles) {
+					this.addWatchFile(fileName);
+				}
 			}
 		},
 		writeBundle(): Promise<void> | void {
@@ -75,9 +56,15 @@ export const rollupPluginCopy = (pluginOptions?: CopyOptions): Rollup.Plugin => 
 			}
 		},
 		watchChange(id): void {
-			if (id === copy.cacheFile) {
+			if (id === copy.cacheFile || copy.hasSourceFile(id)) {
 				rollup.watchRun = true;
 			}
 		},
-	};
+	} satisfies Rollup.Plugin;
+
+	return plugin;
 };
+
+interface CompatiblePlugin {
+	name: string;
+}

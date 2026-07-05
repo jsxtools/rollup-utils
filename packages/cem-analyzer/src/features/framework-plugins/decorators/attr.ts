@@ -1,9 +1,9 @@
-import type { Attribute } from "custom-elements-manifest/schema.d.ts";
-import type { AnalyzePhaseParams } from "../../../create.js";
+import type { AnalyzePhaseParams, CEM, Plugin } from "../../../types.js";
 
-export declare function attrDecoratorPlugin(converter: AttributeConverter): {
-	name: string;
+/** Decorator plugin for @attr fields. */
+export declare function attrDecoratorPlugin(converter?: AttributeConverter): Plugin & {
 	analyzePhase(params: AnalyzePhaseParams): void;
 };
 
-export type AttributeConverter = (attribute: Attribute) => Attribute;
+/** Attribute declaration converter hook. */
+export type AttributeConverter = (attribute: CEM.Attribute) => CEM.Attribute;

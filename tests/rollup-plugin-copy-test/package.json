@@ -1,13 +1,20 @@
 {
 	"name": "@jsxtools/rollup-plugin-copy.test",
+	"version": "0.0.0",
 	"type": "module",
 	"private": true,
 	"scripts": {
 		"clean": "rm -rf dist; rm -rf cpconfig.cpbuildinfo",
-		"test": "rollup --config"
+		"clean:test": "npm run clean:test:rolldown && npm run clean:test:rollup",
+		"clean:test:rolldown": "npm run clean && npm run test:rolldown",
+		"clean:test:rollup": "npm run clean && npm run test:rollup",
+		"test": "npm run test:rollup && npm run test:rolldown",
+		"test:rollup": "rollup --config && node --test output.test.js",
+		"test:rolldown": "rolldown --config rolldown.config.js && node --test output.test.js"
 	},
 	"devDependencies": {
-		"@jsxtools/rollup-plugin-copy": "^0.4.0",
+		"@jsxtools/rollup-plugin-copy": "^0.5.0",
+		"rolldown": "^1.1.4",
 		"rollup": "^4.59.0"
 	}
 }
